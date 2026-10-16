@@ -284,10 +284,10 @@ function abrir(a) {
         <a class="pedir" id="pedir" target="_blank" rel="noopener">${esEncargo ? "Encargar por WhatsApp" : "Pedir por WhatsApp"}</a>
       </div>`;
     const chk = document.getElementById("chk");
-    const limiteB = () => Math.min(cant, stockB);
-    const actualizar = () => {
+	const limiteB = () => stockB;    
+	const actualizar = () => {
       const con = !!(chk && chk.checked);
-      if (con) { if (!nbManual) nb = limiteB(); nb = Math.min(Math.max(1, nb), limiteB()); } else nb = 0;
+      if (con) { if (!nbManual) nb = 1; nb = Math.min(Math.max(1, nb), limiteB()); } else nb = 0;
       if (chk) { document.getElementById("cantb").hidden = !con; document.getElementById("nb").textContent = nb; }
       const subtotal = Number(a.precio || 0) * cant;
       const cargo = esEncargo ? (pe.modo === "pedido" ? cargoUnit : cargoUnit * cant) : 0;
