@@ -678,26 +678,70 @@ function aNumero(v) {
   return Number.isFinite(n) ? n : null;
 }
 async function leerHoja(url) {
-  const ctl = new AbortController();
-  const t = setTimeout(() => ctl.abort(), 8000);
-  try {
-    const r = await fetch(url, { signal: ctl.signal, cache: "no-store" });
-    if (!r.ok) throw new Error("respuesta " + r.status);
-    const filas = parseCSV(await r.text()).filter(f => f.some(c => c.trim() !== ""));
-    if (!filas.length) throw new Error("la hoja está vacía");
-    const cab = filas[0].map(normTxt);
-    const col = alias => cab.findIndex(h => alias.includes(h));
-    const iN = col(["nombre", "articulo", "producto", "pin"]);
-    const iC = col(["cantidad", "stock", "existencias", "quedan", "disponibles"]);
-    const iP = col(["precio", "precio de venta", "precio venta", "pvp"]);
-    if (iN < 0) throw new Error("no encontré una columna llamada «nombre»");
-    const datos = filas.slice(1)
-      .map(f => ({ nombre: (f[iN] || "").trim(), cantidad: iC >= 0 ? aNumero(f[iC]) : null, precio: iP >= 0 ? aNumero(f[iP]) : null }))
-      .filter(x => x.nombre);
-    return { datos, columnas: { cantidad: iC >= 0, precio: iP >= 0 } };
-  } catch (err) {
-    throw new Error(err.name === "AbortError" ? "tardó demasiado en responder" : err.message);
-  } finally { clearTimeout(t); }
+  const enlace = new URL(String(url).trim());
+
+  if (
+    enlace.protocol !== "https:" ||
+    enlace.hostname !== "script.google.com" ||
+    !/^\/macros\/s\/[^/]+\/exec$/.test(enlace.pathname)
+  ) {
+    throw new Error(
+      "Pega la URL de la aplicación web de Apps Script que termina en /exec"
+    );
+  }
+
+  return new Promise((resolve, reject) => {
+    const nombre = "jpHoja_" +
+      Date.now().toString(36) + "_" +
+      Math.random().toString(36).slice(2);
+
+    const script = document.createElement("script");
+    let terminado = false;
+    let temporizador;
+
+    function terminar(error, resultado) {
+      if (terminado) return;
+      terminado = true;
+      clearTimeout(temporizador);
+      script.remove();
+      delete window[nombre];
+
+      if (error) reject(error);
+      else resolve(resultado);
+    }
+
+    window[nombre] = resultado => {
+      if (resultado?.error) {
+        terminar(new Error(resultado.error));
+      } else if (
+        !Array.isArray(resultado?.datos) ||
+        !resultado?.columnas
+      ) {
+        terminar(new Error("La hoja devolvió una respuesta no válida."));
+      } else {
+        terminar(null, resultado);
+      }
+    };
+
+    temporizador = setTimeout(() => {
+      terminar(new Error(
+        "La hoja tardó demasiado. Revisa la implementación y vuelve a probar."
+      ));
+    }, 25000);
+
+    script.onerror = () => {
+      terminar(new Error(
+        "No se pudo conectar. Revisa que la aplicación web permita acceso a cualquier usuario."
+      ));
+    };
+
+    enlace.searchParams.set("callback", nombre);
+    enlace.searchParams.set("_", Date.now().toString());
+
+    script.src = enlace.href;
+    script.async = true;
+    document.head.appendChild(script);
+  });
 }
 function aplicarHoja(res, articulos, ajustes) {
   // Filas de la hoja: «Artículo» o «Pack | Pieza» (las de pieza llevan una barra vertical)

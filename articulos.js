@@ -11,7 +11,7 @@ const AJUSTES = {
   "whatsapp": "50766057804",
   "moneda": "$",
   "mostrarMedidas": true,
-  "hojaUrl": "",
+  "hojaUrl": "https://script.google.com/macros/s/AKfycbx-i-3nthBcRx0wQfJvWC5pmPZ7z76htroXg_zmi9bCbXWtWdbNjs1vLn_nhREPFYZo/exec",
   "carrito": true,
   "efectoPack": "elegidos",
   "github": {
