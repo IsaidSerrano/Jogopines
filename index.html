@@ -721,7 +721,7 @@ async function sincronizarHoja() {
   catch (err) { console.warn("No se pudo leer la hoja de inventario:", err.message); return false; }
 }
 const refrescar = () => { pintarCuadricula(); pintarCarrito(false); };
-const VERSION = "v3 · packs, carrito y Yappy";
+const VERSION = "Hecho con cariño por Jogopines 💛";
 document.body.insertAdjacentHTML("beforeend", `<p class="version">Catálogo ${VERSION}</p>`);
 console.info("Jogopines catálogo", VERSION);
 pintarFiltros();

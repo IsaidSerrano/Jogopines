@@ -15,11 +15,11 @@ const AJUSTES = {
   "carrito": true,
   "efectoPack": "elegidos",
   "yappy": {
-    "activo": false,
-    "numero": "",
+    "activo": true,
+    "numero": "6605-7804",
     "nombre": "",
-    "qr": "Fotos/yappy-qr.png",
-    "texto": "Escanea el QR o envía el pago al número. Luego presiona «Ya pagué» para mandarnos tu comprobante por WhatsApp."
+    "qr": "Fotos/JOGOYAPPY.png",
+    "texto": "Escanea el QR o escribe el número. Luego, mándanos un \"Ya pagué\" y envíanos tu comprobante por WhatsApp."
   },
   "encargo": {
     "activo": true,
@@ -50,7 +50,7 @@ const AJUSTES = {
 const CATEGORIAS = [{"nombre":"Música","emoji":"🎵"},{"nombre":"Anime","emoji":"🌸"},{"nombre":"Juegos","emoji":"🎮"},{"nombre":"Series","emoji":"📺"},{"nombre":"Películas","emoji":"🎬"},{"nombre":"Otros","emoji":"✨"}];
 
 const ARTICULOS = [
-  {"nombre":"Escuela Xavier de X-Men","categoria":"Películas","precio":2.5,"cantidad":1,"broche":true,"medidas":"4 × 2.3 cm","verMedidas":true,"encargo":true,"imagen":"Fotos/f4207880-85ae-462b-b3a2-b510449181a9.avif","descripcion":"Listo para tu primer día de clases entre mutantes. 🧬"},
+  {"nombre":"Escuela Xavier de X-Men","categoria":"Películas","precio":2.5,"cantidad":0,"broche":true,"medidas":"4 × 2.3 cm","verMedidas":true,"encargo":true,"imagen":"Fotos/f4207880-85ae-462b-b3a2-b510449181a9.avif","descripcion":"Listo para tu primer día de clases entre mutantes. 🧬"},
   {"nombre":"Hora de Aventura: la pandilla de Ooo","categoria":"Series","precio":2,"cantidad":10,"broche":true,"medidas":"Marceline con bajo: 2.9 × 3.5 cm Pandilla reunida: 3.7 × 3.1 cm Marceline y Dulce Princesa: 3.2 × 2.9 cm Finn y Jake sentados: 3.6 × 3.2 cm Finn, Jake y BMO apilados: 1.8 × 3.3 cm BMO con sombrero café: 2.7 × 3.6 cm BMO con sombrero blanco: 2.4 × 3.3 cm Finn y Jake de aventuras: 3.1 × 3.7 cm BMO con flores: 3.1 × 3.4 cm Finn de pie: 2.8 × 3.6 cm","verMedidas":true,"encargo":true,"imagen":"Fotos/8aa160e8478847978b56cdf7b15ebf79-goods.avif","descripcion":"Con esta pandilla, cualquier día se vuelve una aventura. 🗡️💛","piezas":[{"nombre":"Marceline con bajo","medidas":"2.9 × 3.5 cm","imagen":"","cantidad":1},{"nombre":"Pandilla reunida","medidas":"3.7 × 3.1 cm","imagen":"","cantidad":1},{"nombre":"Marceline y Dulce Princesa","medidas":"3.2 × 2.9 cm","imagen":"","cantidad":1},{"nombre":"Finn y Jake sentados","medidas":"3.6 × 3.2 cm","imagen":"","cantidad":1},{"nombre":"Finn, Jake y BMO apilados","medidas":"1.8 × 3.3 cm","imagen":"","cantidad":1},{"nombre":"BMO con sombrero café","medidas":"2.7 × 3.6 cm","imagen":"","cantidad":1},{"nombre":"BMO con sombrero blanco","medidas":"2.4 × 3.3 cm","imagen":"","cantidad":1},{"nombre":"Finn y Jake de aventuras","medidas":"3.1 × 3.7 cm","imagen":"","cantidad":1},{"nombre":"BMO con flores","medidas":"3.1 × 3.4 cm","imagen":"","cantidad":1},{"nombre":"Finn de pie","medidas":"2.8 × 3.6 cm","imagen":"","cantidad":1}]},
   {"nombre":"Hello Kitty y sus cinco encantos","categoria":"Series","precio":2,"cantidad":5,"broche":true,"medidas":"","verMedidas":true,"encargo":true,"imagen":"Fotos/0053833e-1a2c-46de-87bc-795baa9b1c09.avif","descripcion":"Entre lacitos y flores, derrochando ternura a donde vaya. 🎀"},
   {"nombre":"Snoopy en modo Navidad","categoria":"Series","precio":2.5,"cantidad":6,"broche":true,"medidas":"Corona: 3.1 × 3 cm Trineo: 3.2 × 3 cm Saco de regalos: 2.5 × 3 cm Árbol y regalos: 2.9 × 3 cm Árbol con adornos colgantes: 2.9 × 3.3 cm Con pajaritos: 2.3 × 3.2 cm","verMedidas":true,"encargo":true,"imagen":"Fotos/1676d58939114fe7a4e640036d295326-goods.avif","descripcion":"Entre regalos y gorritos, Snoopy ya anda en modo navideño. 🎄🐾","piezas":[{"nombre":"Corona","medidas":"3.1 × 3 cm","imagen":"","cantidad":1},{"nombre":"Trineo","medidas":"3.2 × 3 cm","imagen":"","cantidad":1},{"nombre":"Saco de regalos","medidas":"2.5 × 3 cm","imagen":"","cantidad":1},{"nombre":"Árbol y regalos","medidas":"2.9 × 3 cm","imagen":"","cantidad":1},{"nombre":"Árbol con adornos colgantes","medidas":"2.9 × 3.3 cm","imagen":"","cantidad":1},{"nombre":"Con pajaritos","medidas":"2.3 × 3.2 cm","imagen":"","cantidad":1}]},
