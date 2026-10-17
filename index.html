@@ -700,20 +700,35 @@ async function leerHoja(url) {
   } finally { clearTimeout(t); }
 }
 function aplicarHoja(res, articulos, ajustes) {
-  const mapa = new Map(res.datos.map(x => [normTxt(x.nombre), x]));
+  // Filas de la hoja: «Artículo» o «Pack | Pieza» (las de pieza llevan una barra vertical)
+  const mapa = new Map();
+  const filasPieza = [];
+  res.datos.forEach(x => {
+    const i = x.nombre.indexOf("|");
+    if (i > 0) filasPieza.push({ pack: normTxt(x.nombre.slice(0, i)), pieza: normTxt(x.nombre.slice(i + 1)), x });
+    else mapa.set(normTxt(x.nombre), x);
+  });
   let coinciden = 0;
   articulos.forEach(a => {
     const x = mapa.get(normTxt(a.nombre));
-    if (!x) return;
-    coinciden++;
-    if (x.cantidad != null && !(Array.isArray(a.piezas) && a.piezas.length)) a.cantidad = Math.max(0, Math.floor(x.cantidad)); // en packs, la cantidad sale de sus piezas
-    if (x.precio != null && x.precio >= 0) a.precio = x.precio;
+    const esPk = Array.isArray(a.piezas) && a.piezas.length > 0;
+    if (x) {
+      coinciden++;
+      if (x.cantidad != null && !esPk) a.cantidad = Math.max(0, Math.floor(x.cantidad)); // en packs, la cantidad sale de sus piezas
+      if (x.precio != null && x.precio >= 0) a.precio = x.precio;
+    }
+    if (esPk) filasPieza.forEach(f => {
+      if (f.pack !== normTxt(a.nombre)) return;
+      const p = a.piezas.find(q => normTxt(q.nombre) === f.pieza);
+      if (!p) return;
+      if (f.x.cantidad != null) p.cantidad = Math.max(0, Math.floor(f.x.cantidad));
+      if (f.x.precio != null && f.x.precio >= 0) p.precio = f.x.precio;
+    });
   });
   const b = NOMBRES_BROCHE.map(n => mapa.get(n)).find(Boolean);
   if (b && b.cantidad != null && ajustes.broche) ajustes.broche.cantidad = Math.max(0, Math.floor(b.cantidad));
   return coinciden;
 }
-
 
 async function sincronizarHoja() {
   if (!AJUSTES.hojaUrl) return false;

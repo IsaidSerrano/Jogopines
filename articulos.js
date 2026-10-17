@@ -14,6 +14,12 @@ const AJUSTES = {
   "hojaUrl": "",
   "carrito": true,
   "efectoPack": "elegidos",
+  "github": {
+    "usuario": "",
+    "repo": "",
+    "rama": "main",
+    "carpeta": ""
+  },
   "yappy": {
     "activo": true,
     "numero": "6605-7804",
