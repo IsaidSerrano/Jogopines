@@ -56,15 +56,15 @@ header .lineas p:first-child { color: var(--texto); font-weight: 700; font-size:
 /* Cuadrícula: 5 columnas, y menos en pantallas chicas */
 .cuadricula {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 32px 28px;
   max-width: 1180px;
   margin: 0 auto;
   padding: 24px 16px 56px;
 }
-@media (max-width: 1000px) { .cuadricula { grid-template-columns: repeat(4, 1fr); } }
-@media (max-width: 780px)  { .cuadricula { grid-template-columns: repeat(3, 1fr); gap: 24px 18px; } }
-@media (max-width: 520px)  { .cuadricula { grid-template-columns: repeat(2, 1fr); gap: 20px 14px; } }
+@media (max-width: 1000px) { .cuadricula { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 780px)  { .cuadricula { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 18px; } }
+@media (max-width: 520px)  { .cuadricula { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 14px; } }
 
 .vacio { grid-column: 1 / -1; text-align: center; color: var(--texto-suave); }
 
@@ -209,6 +209,62 @@ dialog { max-height: 92vh; overflow-y: auto; }
 .yappy-num { text-align: center; }
 .yappy-num small { display: block; color: var(--texto-suave); }
 .yappy-num b { font-size: 1.4rem; letter-spacing: .02em; }
+
+/* ===== Ajustes para teléfonos (pantallas verticales 9:16) ===== */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+html, body { max-width: 100%; overflow-x: hidden; }   /* red de seguridad: nunca se mueve de lado */
+img { max-width: 100%; }
+button { -webkit-tap-highlight-color: transparent; }
+
+/* Tarjetas: el precio y la etiqueta pueden pasar a otra línea en vez de ensanchar la página */
+.articulo { min-width: 0; width: 100%; display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; }   /* la foto siempre empieza arriba, aunque la fila tenga tarjetas de distinto alto */
+.articulo .fila { margin-top: auto; padding-top: 4px; }
+.articulo .nombre { overflow-wrap: anywhere; }
+.articulo .fila { flex-wrap: wrap; row-gap: 4px; }
+.articulo .estado { white-space: normal; text-align: center; line-height: 1.25; }
+@media (hover: none) { .articulo:hover { transform: none; } }
+
+/* Ventanas y textos largos */
+dialog { max-height: 92vh; max-height: 92dvh; overscroll-behavior: contain; }
+.detalle h2, .detalle p, .pz-datos, .lin span, .desglose span { overflow-wrap: anywhere; }
+.pieza { grid-template-columns: auto 56px minmax(0, 1fr) auto; }
+.yappy-qr, .yappy-qr-vacio { width: min(220px, 70vw); }
+.yappy-qr-vacio { height: min(220px, 70vw); }
+
+/* Carrito flotante y panel respetan las barras del teléfono */
+.btn-carrito { right: calc(12px + env(safe-area-inset-right, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+.panel-carrito footer { padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
+.version { padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px)); }
+
+@media (max-width: 520px) {
+  header { padding: 16px 12px 14px; }
+  header img { height: 96px; }
+  header h1 { font-size: 1.8rem; }
+  header .lineas { margin-top: 6px; line-height: 1.4; }
+  header .lineas p { font-size: .88rem; }
+  header .lineas p:first-child { font-size: 1rem; }
+  .enlaces { gap: 6px; margin-top: 10px; }
+  .enlaces a { padding: 7px 12px; font-size: .85rem; }
+  #topCarrito { display: none; }                      /* en el teléfono ya está el botón flotante del carrito */
+  /* Categorías en una sola fila que se desliza con el dedo */
+  .filtros { margin-top: 14px; gap: 6px; padding: 0 12px 6px; flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .filtros::-webkit-scrollbar { display: none; }
+  .filtros button { flex: none; padding: 6px 12px; font-size: .9rem; white-space: nowrap; }
+  .cuadricula { padding: 12px 12px 90px; }
+  .articulo { padding: 8px 8px 12px; border-radius: 14px; }
+  .articulo .nombre { font-size: .9rem; }
+  .foto { border-radius: 10px; }
+  dialog { width: calc(100vw - 24px); border-radius: 16px; }
+  .detalle { padding: 14px 14px 20px; }
+  .cantidad button { width: 40px; height: 40px; }
+  .btn-add, .pedir, .btn-yappy, .cerrar { min-height: 44px; }
+  .pedir { display: flex; align-items: center; justify-content: center; }
+  #detalleYappy .pedir { display: flex; }
+  .pieza { gap: 8px; padding: 8px; grid-template-columns: auto 48px minmax(0, 1fr) auto; }
+  .pz-img { width: 48px; height: 48px; }
+  .panel-carrito { width: 100vw; }
+}
 </style>
 </head>
 
@@ -678,70 +734,26 @@ function aNumero(v) {
   return Number.isFinite(n) ? n : null;
 }
 async function leerHoja(url) {
-  const enlace = new URL(String(url).trim());
-
-  if (
-    enlace.protocol !== "https:" ||
-    enlace.hostname !== "script.google.com" ||
-    !/^\/macros\/s\/[^/]+\/exec$/.test(enlace.pathname)
-  ) {
-    throw new Error(
-      "Pega la URL de la aplicación web de Apps Script que termina en /exec"
-    );
-  }
-
-  return new Promise((resolve, reject) => {
-    const nombre = "jpHoja_" +
-      Date.now().toString(36) + "_" +
-      Math.random().toString(36).slice(2);
-
-    const script = document.createElement("script");
-    let terminado = false;
-    let temporizador;
-
-    function terminar(error, resultado) {
-      if (terminado) return;
-      terminado = true;
-      clearTimeout(temporizador);
-      script.remove();
-      delete window[nombre];
-
-      if (error) reject(error);
-      else resolve(resultado);
-    }
-
-    window[nombre] = resultado => {
-      if (resultado?.error) {
-        terminar(new Error(resultado.error));
-      } else if (
-        !Array.isArray(resultado?.datos) ||
-        !resultado?.columnas
-      ) {
-        terminar(new Error("La hoja devolvió una respuesta no válida."));
-      } else {
-        terminar(null, resultado);
-      }
-    };
-
-    temporizador = setTimeout(() => {
-      terminar(new Error(
-        "La hoja tardó demasiado. Revisa la implementación y vuelve a probar."
-      ));
-    }, 25000);
-
-    script.onerror = () => {
-      terminar(new Error(
-        "No se pudo conectar. Revisa que la aplicación web permita acceso a cualquier usuario."
-      ));
-    };
-
-    enlace.searchParams.set("callback", nombre);
-    enlace.searchParams.set("_", Date.now().toString());
-
-    script.src = enlace.href;
-    script.async = true;
-    document.head.appendChild(script);
-  });
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), 8000);
+  try {
+    const r = await fetch(url, { signal: ctl.signal, cache: "no-store" });
+    if (!r.ok) throw new Error("respuesta " + r.status);
+    const filas = parseCSV(await r.text()).filter(f => f.some(c => c.trim() !== ""));
+    if (!filas.length) throw new Error("la hoja está vacía");
+    const cab = filas[0].map(normTxt);
+    const col = alias => cab.findIndex(h => alias.includes(h));
+    const iN = col(["nombre", "articulo", "producto", "pin"]);
+    const iC = col(["cantidad", "stock", "existencias", "quedan", "disponibles"]);
+    const iP = col(["precio", "precio de venta", "precio venta", "pvp"]);
+    if (iN < 0) throw new Error("no encontré una columna llamada «nombre»");
+    const datos = filas.slice(1)
+      .map(f => ({ nombre: (f[iN] || "").trim(), cantidad: iC >= 0 ? aNumero(f[iC]) : null, precio: iP >= 0 ? aNumero(f[iP]) : null }))
+      .filter(x => x.nombre);
+    return { datos, columnas: { cantidad: iC >= 0, precio: iP >= 0 } };
+  } catch (err) {
+    throw new Error(err.name === "AbortError" ? "tardó demasiado en responder" : err.message);
+  } finally { clearTimeout(t); }
 }
 function aplicarHoja(res, articulos, ajustes) {
   // Filas de la hoja: «Artículo» o «Pack | Pieza» (las de pieza llevan una barra vertical)
