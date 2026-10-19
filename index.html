@@ -278,6 +278,12 @@ dialog { max-height: 92vh; max-height: 92dvh; overscroll-behavior: contain; }
 .r-campo input, .r-campo textarea { display: block; width: 100%; margin-top: 4px; padding: 8px 10px; border: 1px solid var(--borde); border-radius: 8px;
   font: inherit; font-size: 16px; font-weight: 400; background: #fff; color: inherit; resize: vertical; }
 .r-sec { display: flex; justify-content: center; gap: 18px; }
+.lin span:last-child, .desglose span:last-child { white-space: nowrap; overflow-wrap: normal; flex: none; }
+.item-pie .link { white-space: nowrap; }
+.ped-lista:focus, .recibo:focus { outline: none; }
+.ped-lista { display: grid; gap: 10px; margin-top: 10px; max-height: 50vh; max-height: 50dvh; overflow-y: auto; }
+.articulo.resaltada { box-shadow: 0 0 0 3px var(--acento), 0 6px 20px rgba(138, 59, 78, .35); animation: pulso 1.1s ease-in-out 3; }
+@keyframes pulso { 50% { transform: scale(1.03); } }
 </style>
 </head>
 
@@ -298,6 +304,7 @@ dialog { max-height: 92vh; max-height: 92dvh; overscroll-behavior: contain; }
 <aside class="panel-carrito" id="panelCarrito" aria-label="Carrito de compras"></aside>
 <dialog id="ventanaYappy"><div class="detalle" id="detalleYappy"></div></dialog>
 <dialog id="ventanaRecibo"><div class="detalle" id="detalleRecibo"></div></dialog>
+<dialog id="ventanaPedido"><div class="detalle" id="detallePedido"></div></dialog>
 
 <script src="articulos.js"></script>
 <script>
@@ -393,6 +400,7 @@ function pintarCuadricula() {
     const e = estado(a);
     const boton = document.createElement("button");
     boton.className = "articulo" + (e.cls === "agotado" ? " sin-stock" : "");
+    boton.dataset.nombre = a.nombre;
     boton.innerHTML = `${fotoHTML(a)}
       <div class="nombre">${esc(a.nombre)}</div>
       ${esPack(a) ? '<div class="sub">📦 Pack · elige tus pines</div>' : ""}
@@ -440,36 +448,69 @@ function codigoPedido() {
   const d = new Date();
   return "JP-" + String(d.getDate()).padStart(2, "0") + String(d.getMonth() + 1).padStart(2, "0") + "-" + Math.random().toString(36).slice(2, 5).toUpperCase();
 }
+/* Texto sencillo para WhatsApp: sin emojis ni símbolos raros (se pueden ver como «?» en algunos equipos) */
+const plano = t => String(t ?? "")
+  .replace(/[\u{1F000}-\u{1FFFF}\u{2190}-\u{2BFF}\u{FE0F}\u200D]/gu, "")
+  .replace(/[×✕]/g, "x").replace(/[’‘´`]/g, "'").replace(/[“”]/g, '"').replace(/[–—]/g, "-").replace(/…/g, "...")
+  .replace(/\s{2,}/g, " ").trim();
+
+/* ---------- Enlace que reconstruye el pedido en el catálogo ---------- */
+const hashTxt = (s, n) => { let h = 2166136261; const t = normTxt(s); for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36).padStart(7, "0").slice(-n); };
+function codificarPedido(items) {
+  return items.map(it => {
+    const a = ARTICULOS.find(x => x.nombre === it.nombre);
+    if (!a) return null;
+    const cuerpo = it.piezas ? it.piezas.map(i => a.piezas[i] ? hashTxt(a.piezas[i].nombre, 4) : "").filter(Boolean).join(".") : String(it.cant || 1);
+    return [hashTxt(a.nombre, 5), it.modo === "encargo" ? "e" : "n", cuerpo, it.nb || 0].join("_");
+  }).filter(Boolean).join("~");
+}
+const enlacePedido = items => location.href.split("#")[0] + "#pedido=" + codificarPedido(items);
+function decodificarPedido(txt) {
+  return txt.split("~").map(seg => {
+    const [h, m, cuerpo = "", nb] = seg.split("_");
+    const a = ARTICULOS.find(x => hashTxt(x.nombre, 5) === h);
+    if (!a) return { faltante: true };
+    const it = { nombre: a.nombre, modo: m === "e" ? "encargo" : "normal", nb: Number(nb) || 0 };
+    if (esPack(a)) {
+      const hs = cuerpo.split(".").filter(Boolean);
+      it.piezas = hs.map(ph => a.piezas.findIndex(p => hashTxt(p.nombre, 4) === ph)).filter(i => i >= 0);
+      it.piezasPedidas = hs.length;
+    } else it.cant = Math.max(1, Number(cuerpo) || 1);
+    return it;
+  });
+}
+
 /* Recibo en texto para WhatsApp: cada dato en su renglón (los *asteriscos* se ven en negrita en WhatsApp) */
 function mensajePedido(items, tipo = "pedido", extra = {}) {
   const cs = items.map(it => ({ it, c: calcular(it) })).filter(x => x.c);
-  const SEP = "━━━━━━━━━━━━━━";
+  const SEP = "-----------------------";
   const total = dinero(cs.reduce((s, x) => s + x.c.total, 0));
   const hayEnc = cs.some(x => x.it.modo === "encargo");
-  const tiempo = AJUSTES.encargo && AJUSTES.encargo.tiempo ? " · " + AJUSTES.encargo.tiempo : "";
-  const titulo = tipo === "yappy" ? "💛 *PAGO CON YAPPY*" : tipo === "cotizacion" ? "💬 *COTIZACIÓN*" : "🧾 *PEDIDO*";
-  const L = [`${titulo} · ${negocio}`, "📅 " + new Date().toLocaleString("es", { dateStyle: "short", timeStyle: "short" })];
-  if (extra.ref) L.push("🔖 Ref: " + extra.ref);
-  if (extra.nombre) L.push("👤 Cliente: " + extra.nombre);
+  const tiempo = AJUSTES.encargo && AJUSTES.encargo.tiempo ? " - " + AJUSTES.encargo.tiempo : "";
+  const titulo = tipo === "yappy" ? "PAGO CON YAPPY" : tipo === "cotizacion" ? "COTIZACION" : "PEDIDO";
+  const L = [`*${titulo} - ${plano(negocio)}*`, "Fecha: " + new Date().toLocaleString("es", { dateStyle: "short", timeStyle: "short" })];
+  if (extra.ref) L.push("Ref: " + extra.ref);
+  if (extra.nombre) L.push("Cliente: " + plano(extra.nombre));
   L.push(SEP, "");
   cs.forEach(({ it, c }, i) => {
     const a = c.a;
-    L.push(`*${i + 1}) ${a.nombre}*`);
-    if (it.piezas) c.lineas.forEach(l => L.push(`   ▫️ ${l.t}${l.v ? " — " + l.v : ""}`));
+    L.push(`*${i + 1}) ${plano(a.nombre)}*`);
+    if (it.piezas) c.lineas.forEach(l => L.push(`- ${plano(l.t)}${l.v ? ": " + l.v : ""}`));
     else {
-      L.push(`   ▫️ ${c.unidades} × ${precio(a.precio)} — ${precio(c.subtotal)}`);
-      c.lineas.slice(1).forEach(l => L.push(`   ▫️ ${l.t}${l.v ? " — " + l.v : ""}`));
+      L.push(`- ${c.unidades} x ${precio(a.precio)}: ${precio(c.subtotal)}`);
+      c.lineas.slice(1).forEach(l => L.push(`- ${plano(l.t)}${l.v ? ": " + l.v : ""}`));
     }
-    L.push(it.modo === "encargo" ? `   📦 Pedido especial (agotado)${tiempo}` : "   ✅ Disponible");
-    L.push(`   Subtotal: *${precio(c.total)}*`, "");
+    L.push(it.modo === "encargo" ? `Pedido especial (agotado)${tiempo}` : "Disponible");
+    L.push(`Subtotal: *${precio(c.total)}*`, "");
   });
   L.push(SEP, `*TOTAL: ${precio(total)}*`);
   if (hayEnc) L.push("_Incluye cargo por pedido especial._");
   L.push("");
-  if (tipo === "yappy") L.push(`Ya pagué ${precio(total)} con Yappy. Te envío el comprobante. 🙌`);
+  if (tipo === "yappy") L.push(`Ya pagué ${precio(total)} con Yappy. Te envío el comprobante.`);
   else if (tipo === "cotizacion") L.push("Solo quiero saber el precio final y si está disponible. ¡Gracias!");
   else L.push(hayEnc ? "¿Cuánto tardaría el pedido especial? ¡Gracias!" : "¿Está disponible? ¡Gracias!");
-  if (extra.nota) L.push("", "📝 *Mensaje:* " + extra.nota);
+  if (extra.nota) L.push("", "Mensaje: " + plano(extra.nota));
+  if (!extra.sinEnlace && cs.length) L.push("", "Ver este pedido en el catalogo:", enlacePedido(cs.map(x => x.it)));
   return L.join("\n");
 }
 const urlWsp = msg => `https://wa.me/${whatsapp}?text=${encodeURIComponent(msg)}`;
@@ -638,6 +679,86 @@ function abrirRecibo(pedido) {
   ventanaRecibo.showModal();
 }
 ventanaRecibo.addEventListener("click", e => { if (e.target === ventanaRecibo) ventanaRecibo.close(); });
+
+/* ---------- Pedido abierto desde un enlace (el que llega en el mensaje de WhatsApp) ---------- */
+const ventanaPedido = document.getElementById("ventanaPedido");
+function ajustarItem(it) {      // adapta un pedido a lo que hay ahora, para cargarlo en el carrito
+  const a = ARTICULOS.find(x => x.nombre === it.nombre);
+  if (!a || it.faltante) return null;
+  const copia = { ...it };
+  if (it.piezas) {
+    copia.piezas = it.piezas.filter(i => it.modo === "encargo" || cantPieza(a.piezas[i]) > 0);
+    if (!copia.piezas.length) return null;
+  } else {
+    const tope = it.modo === "encargo" ? Math.max(1, Number(AJUSTES.encargo && AJUSTES.encargo.maximo) || 10) : stockDe(a);
+    copia.cant = Math.min(it.cant, tope);
+    if (copia.cant < 1) return null;
+  }
+  return copia;
+}
+function irAlArticulo(nombre) {
+  ventanaPedido.close();
+  filtro = "Todo"; pintarFiltros(); pintarCuadricula();
+  const t = [...cuadricula.children].find(x => x.dataset && x.dataset.nombre === nombre);
+  if (!t) return;
+  t.scrollIntoView({ behavior: "smooth", block: "center" });
+  t.classList.add("resaltada");
+  setTimeout(() => t.classList.remove("resaltada"), 5000);
+}
+function mostrarPedidoCompartido(items) {
+  let total = 0;
+  const filas = items.map((it, k) => {
+    if (it.faltante) return `<div class="item-c"><b>Artículo no encontrado</b><div class="lineas-c"><div class="lin"><span>Puede que haya cambiado de nombre o ya no esté en el catálogo.</span></div></div></div>`;
+    const a = ARTICULOS.find(x => x.nombre === it.nombre);
+    const c = calcular(it);
+    if (c) total += c.total;
+    let estadoTxt, cls = "disp";
+    if (it.piezas) {
+      const libres = it.piezas.filter(i => cantPieza(a.piezas[i]) > 0).length;
+      const faltan = (it.piezasPedidas || it.piezas.length) - it.piezas.length;
+      estadoTxt = `${libres} de ${it.piezas.length} pines disponibles` + (faltan > 0 ? ` · ${faltan} ya no existen en el catálogo` : "");
+      cls = libres === it.piezas.length && !faltan ? "disp" : libres === 0 ? "agotado" : "pocas";
+    } else {
+      const st = stockDe(a);
+      if (it.modo === "encargo") { estadoTxt = st > 0 ? `Pidió por encargo; ahora hay ${st}` : "Pedido especial (agotado)"; cls = st > 0 ? "disp" : "pocas"; }
+      else if (st >= it.cant) { estadoTxt = `Hay ${st} disponibles (pide ${it.cant})`; }
+      else if (st > 0) { estadoTxt = `Solo hay ${st} (pide ${it.cant})`; cls = "pocas"; }
+      else { estadoTxt = "Agotado ahora"; cls = "agotado"; }
+    }
+    const lin = c ? c.lineas.map(l => `<div class="lin"><span>${esc(l.t)}</span><span>${l.v || ""}</span></div>`).join("") : "";
+    const detallePz = it.piezas ? it.piezas.map(i => `<div class="lin"><span>${esc(a.piezas[i].nombre)}</span><span>${cantPieza(a.piezas[i]) > 0 ? "sí hay" : "agotado"}</span></div>`).join("") : "";
+    return `<div class="item-c">
+      <div class="item-cab"><b>${k + 1}) ${esc(a.nombre)}</b></div>
+      <span class="estado ${cls}">${esc(estadoTxt)}</span>
+      <div class="lineas-c">${it.piezas ? detallePz : lin}</div>
+      <div class="item-pie"><button class="link" data-ir="${esc(a.nombre)}">Ver en el catálogo</button><span class="sub-c">${c ? `Subtotal <b>${precio(c.total)}</b>` : ""}</span></div>
+    </div>`;
+  }).join("");
+  document.getElementById("detallePedido").innerHTML = `
+    <h2>📋 Pedido del cliente</h2>
+    <p class="aviso-pedido">Así quedó el pedido con los precios y la disponibilidad de este momento.</p>
+    <div class="ped-lista">${filas}</div>
+    <div class="total-c"><span>Total (precios de hoy)</span><b>${precio(total)}</b></div>
+    ${usaCarrito ? '<button class="btn-add" id="pCargar" style="margin-top:12px;width:100%">Cargar en el carrito</button>' : ""}
+    <button class="cerrar" id="pCerrar">Cerrar</button>`;
+  const cont = document.getElementById("detallePedido");
+  cont.querySelectorAll("[data-ir]").forEach(b => b.addEventListener("click", () => irAlArticulo(b.dataset.ir)));
+  document.getElementById("pCerrar").addEventListener("click", () => ventanaPedido.close());
+  const cg = document.getElementById("pCargar");
+  if (cg) cg.addEventListener("click", () => {
+    const listos = items.map(ajustarItem).filter(Boolean);
+    ventanaPedido.close();
+    if (listos.length) { listos.forEach(it => carrito.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ...it })); pintarCarrito(true); }
+  });
+  ventanaPedido.showModal();
+}
+function procesarPedidoEnlace() {
+  const m = location.hash.match(/^#pedido=(.+)$/);
+  if (!m) return;
+  try { history.replaceState(null, "", location.href.split("#")[0]); } catch (e) {}
+  try { mostrarPedidoCompartido(decodificarPedido(decodeURIComponent(m[1]))); } catch (e) { console.warn("No se pudo leer el pedido del enlace", e); }
+}
+ventanaPedido.addEventListener("click", e => { if (e.target === ventanaPedido) ventanaPedido.close(); });
 
 /* ---------- Ventana del pin ---------- */
 function abrir(a) {
@@ -885,9 +1006,10 @@ if (AJUSTES.hojaUrl) {
   const p = sincronizarHoja().then(ok => { listo = true; return ok; });
   Promise.race([p, new Promise(r => setTimeout(r, 2500))]).then(() => {
     refrescar();
+    procesarPedidoEnlace();
     if (!listo) p.then(ok => { if (ok) refrescar(); });
   });
-} else refrescar();
+} else { refrescar(); procesarPedidoEnlace(); }
 </script>
 
 </body>
