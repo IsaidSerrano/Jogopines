@@ -264,7 +264,20 @@ dialog { max-height: 92vh; max-height: 92dvh; overscroll-behavior: contain; }
   .pieza { gap: 8px; padding: 8px; grid-template-columns: auto 48px minmax(0, 1fr) auto; }
   .pz-img { width: 48px; height: 48px; }
   .panel-carrito { width: 100vw; }
+  .recibo { font-size: .76rem; padding: 10px 12px; }
 }
+
+/* Recibo */
+.recibo { background: #fff; border: 1px dashed var(--acento); border-radius: 12px; padding: 12px 14px; margin: 10px 0; font-size: .82rem; line-height: 1.5;
+  white-space: pre-wrap; overflow-wrap: anywhere; max-height: 42vh; max-height: 42dvh; overflow-y: auto;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace; }
+.r-tipo { display: grid; gap: 6px; margin: 10px 0; font-weight: 600; }
+.r-tipo label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+.r-tipo input { width: 18px; height: 18px; accent-color: var(--acento); }
+.r-campo { display: block; font-weight: 600; margin-top: 10px; font-size: .92rem; }
+.r-campo input, .r-campo textarea { display: block; width: 100%; margin-top: 4px; padding: 8px 10px; border: 1px solid var(--borde); border-radius: 8px;
+  font: inherit; font-size: 16px; font-weight: 400; background: #fff; color: inherit; resize: vertical; }
+.r-sec { display: flex; justify-content: center; gap: 18px; }
 </style>
 </head>
 
@@ -284,6 +297,7 @@ dialog { max-height: 92vh; max-height: 92dvh; overscroll-behavior: contain; }
 <button class="btn-carrito" id="btnCarrito" hidden></button>
 <aside class="panel-carrito" id="panelCarrito" aria-label="Carrito de compras"></aside>
 <dialog id="ventanaYappy"><div class="detalle" id="detalleYappy"></div></dialog>
+<dialog id="ventanaRecibo"><div class="detalle" id="detalleRecibo"></div></dialog>
 
 <script src="articulos.js"></script>
 <script>
@@ -422,22 +436,41 @@ function calcular(it) {
   return { a, lineas, unidades, subtotal, cargo, nb, total: dinero(subtotal + cargo + extra * nb) };
 }
 
-function mensajePedido(items, tipo) {
+function codigoPedido() {
+  const d = new Date();
+  return "JP-" + String(d.getDate()).padStart(2, "0") + String(d.getMonth() + 1).padStart(2, "0") + "-" + Math.random().toString(36).slice(2, 5).toUpperCase();
+}
+/* Recibo en texto para WhatsApp: cada dato en su renglón (los *asteriscos* se ven en negrita en WhatsApp) */
+function mensajePedido(items, tipo = "pedido", extra = {}) {
   const cs = items.map(it => ({ it, c: calcular(it) })).filter(x => x.c);
-  const filas = cs.map(({ it, c }, i) => {
-    const a = c.a;
-    let d = it.piezas
-      ? `${a.nombre}: ` + it.piezas.map(k => a.piezas[k]).filter(Boolean).map(p => p.nombre + (verMed(a) && p.medidas ? ` (${p.medidas})` : "")).join(", ")
-      : `${it.cant} x ${a.nombre}`;
-    if (it.modo === "encargo") d += " [pedido especial, agotado]";
-    if (c.nb) d += ` + ${c.nb} broche${c.nb > 1 ? "s" : ""} de seguridad`;
-    return `${i + 1}) ${d} — ${precio(c.total)}`;
-  });
+  const SEP = "━━━━━━━━━━━━━━";
   const total = dinero(cs.reduce((s, x) => s + x.c.total, 0));
   const hayEnc = cs.some(x => x.it.modo === "encargo");
-  const intro = tipo === "yappy" ? `Hola ${negocio}! Ya pagué con Yappy ${precio(total)} por este pedido:` : `Hola ${negocio}! Quiero hacer este pedido:`;
-  const cierre = tipo === "yappy" ? "Te envío el comprobante." : (hayEnc ? "¿Cuánto tardarían los pedidos especiales?" : "¿Está disponible?");
-  return `${intro}\n${filas.join("\n")}\nTotal: ${precio(total)}. ${cierre}`;
+  const tiempo = AJUSTES.encargo && AJUSTES.encargo.tiempo ? " · " + AJUSTES.encargo.tiempo : "";
+  const titulo = tipo === "yappy" ? "💛 *PAGO CON YAPPY*" : tipo === "cotizacion" ? "💬 *COTIZACIÓN*" : "🧾 *PEDIDO*";
+  const L = [`${titulo} · ${negocio}`, "📅 " + new Date().toLocaleString("es", { dateStyle: "short", timeStyle: "short" })];
+  if (extra.ref) L.push("🔖 Ref: " + extra.ref);
+  if (extra.nombre) L.push("👤 Cliente: " + extra.nombre);
+  L.push(SEP, "");
+  cs.forEach(({ it, c }, i) => {
+    const a = c.a;
+    L.push(`*${i + 1}) ${a.nombre}*`);
+    if (it.piezas) c.lineas.forEach(l => L.push(`   ▫️ ${l.t}${l.v ? " — " + l.v : ""}`));
+    else {
+      L.push(`   ▫️ ${c.unidades} × ${precio(a.precio)} — ${precio(c.subtotal)}`);
+      c.lineas.slice(1).forEach(l => L.push(`   ▫️ ${l.t}${l.v ? " — " + l.v : ""}`));
+    }
+    L.push(it.modo === "encargo" ? `   📦 Pedido especial (agotado)${tiempo}` : "   ✅ Disponible");
+    L.push(`   Subtotal: *${precio(c.total)}*`, "");
+  });
+  L.push(SEP, `*TOTAL: ${precio(total)}*`);
+  if (hayEnc) L.push("_Incluye cargo por pedido especial._");
+  L.push("");
+  if (tipo === "yappy") L.push(`Ya pagué ${precio(total)} con Yappy. Te envío el comprobante. 🙌`);
+  else if (tipo === "cotizacion") L.push("Solo quiero saber el precio final y si está disponible. ¡Gracias!");
+  else L.push(hayEnc ? "¿Cuánto tardaría el pedido especial? ¡Gracias!" : "¿Está disponible? ¡Gracias!");
+  if (extra.nota) L.push("", "📝 *Mensaje:* " + extra.nota);
+  return L.join("\n");
 }
 const urlWsp = msg => `https://wa.me/${whatsapp}?text=${encodeURIComponent(msg)}`;
 
@@ -492,7 +525,7 @@ function pintarCarrito(abrir) {
     <div class="lista">${calc.length ? calc.map(x => itemHTML(x.it, x.c)).join("") : '<p class="vacio-c">Tu carrito está vacío.<br>Abre un pin y presiona «Agregar al carrito». Si es un set, puedes elegir los pines que quieras.</p>'}</div>
     ${calc.length ? `<footer>
       <div class="total-c"><span>Total</span><b>${precio(total)}</b></div>
-      ${whatsapp ? `<a class="pedir" target="_blank" rel="noopener" href="${urlWsp(mensajePedido(carrito))}">Pedir todo por WhatsApp</a>` : ""}
+      <button class="btn-add" data-a="recibo">🧾 Ver recibo y enviar</button>
       ${yappy.activo ? '<button class="btn-yappy" data-a="yappy">Pagar con Yappy</button>' : ""}
       <button class="link" data-a="vaciar">Vaciar carrito</button>
     </footer>` : ""}`;
@@ -521,6 +554,7 @@ panelCarrito.addEventListener("click", ev => {
   else if (acc === "mas" || acc === "menos") cambiarCant(id, acc === "mas" ? 1 : -1);
   else if (acc === "vaciar") { if (confirm("¿Vaciar el carrito?")) { carrito = []; pintarCarrito(false); } }
   else if (acc === "yappy") abrirYappy(carrito);
+  else if (acc === "recibo") abrirRecibo(carrito);
 });
 btnCarrito.addEventListener("click", () => abrirPanel(true));
 const topC = document.getElementById("topCarrito");
@@ -555,6 +589,55 @@ function abrirYappy(pedido) {
   ventanaYappy.showModal();
 }
 ventanaYappy.addEventListener("click", e => { if (e.target === ventanaYappy) ventanaYappy.close(); });
+
+/* ---------- Recibo: ver, enviar por WhatsApp, copiar o compartir ---------- */
+const ventanaRecibo = document.getElementById("ventanaRecibo");
+function abrirRecibo(pedido) {
+  const lista = (pedido || []).filter(it => calcular(it));
+  if (!lista.length) return;
+  const ref = codigoPedido();
+  document.getElementById("detalleRecibo").innerHTML = `
+    <h2>🧾 Tu recibo</h2>
+    <p class="aviso-pedido">Revisa tu pedido. Al enviarlo, me llega este mismo recibo por WhatsApp.</p>
+    <div class="recibo" id="reciboVista"></div>
+    <div class="r-tipo">
+      <label><input type="radio" name="rTipo" value="pedido" checked> Quiero comprar</label>
+      <label><input type="radio" name="rTipo" value="cotizacion"> Solo quiero cotizar o preguntar</label>
+    </div>
+    <label class="r-campo">Tu nombre (opcional)<input id="rNombre" maxlength="40" autocomplete="name"></label>
+    <label class="r-campo">Mensaje o pregunta (opcional)<textarea id="rNota" rows="2" maxlength="300"></textarea></label>
+    <div class="acciones-col">
+      ${whatsapp ? '<a class="pedir" id="rWsp" target="_blank" rel="noopener">Enviar por WhatsApp</a>' : ""}
+      ${yappy.activo ? '<button class="btn-yappy" id="rYappy">💛 Pagar con Yappy</button>' : ""}
+      <div class="r-sec"><button class="link" id="rCopiar">Copiar recibo</button>${navigator.share ? '<button class="link" id="rCompartir">Compartir…</button>' : ""}</div>
+    </div>
+    <button class="cerrar" id="rCerrar">Cerrar</button>`;
+  const q = id => document.getElementById(id);
+  try { q("rNombre").value = localStorage.getItem("jogopines_nombre") || ""; } catch (e) {}
+  const datos = () => ({ tipo: (document.querySelector('input[name="rTipo"]:checked') || {}).value || "pedido", nombre: q("rNombre").value.trim(), nota: q("rNota").value.trim(), ref });
+  const refrescar = () => {
+    const t = mensajePedido(lista, datos().tipo, datos());
+    q("reciboVista").innerHTML = esc(t).replace(/\*([^*\n]+)\*/g, "<b>$1</b>").replace(/_([^_\n]+)_/g, "<i>$1</i>");
+    if (q("rWsp")) q("rWsp").href = urlWsp(t);
+    return t;
+  };
+  ["input", "change"].forEach(ev => q("detalleRecibo").addEventListener(ev, e => {
+    if (e.target.id === "rNombre") { try { localStorage.setItem("jogopines_nombre", e.target.value.trim()); } catch (er) {} }
+    refrescar();
+  }));
+  q("rCerrar").addEventListener("click", () => ventanaRecibo.close());
+  if (q("rYappy")) q("rYappy").addEventListener("click", () => { ventanaRecibo.close(); abrirYappy(lista); });
+  q("rCopiar").addEventListener("click", async () => {
+    const b = q("rCopiar");
+    try { await navigator.clipboard.writeText(refrescar()); b.textContent = "¡Copiado!"; } catch (e) { b.textContent = "No se pudo copiar"; }
+  });
+  if (q("rCompartir")) q("rCompartir").addEventListener("click", async () => {
+    try { await navigator.share({ title: "Pedido " + negocio, text: refrescar() }); } catch (e) { /* cancelado */ }
+  });
+  refrescar();
+  ventanaRecibo.showModal();
+}
+ventanaRecibo.addEventListener("click", e => { if (e.target === ventanaRecibo) ventanaRecibo.close(); });
 
 /* ---------- Ventana del pin ---------- */
 function abrir(a) {
