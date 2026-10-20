@@ -281,6 +281,12 @@ dialog { max-height: 92vh; max-height: 92dvh; overscroll-behavior: contain; }
 .lin span:last-child, .desglose span:last-child { white-space: nowrap; overflow-wrap: normal; flex: none; }
 .item-pie .link { white-space: nowrap; }
 .ped-lista:focus, .recibo:focus { outline: none; }
+.pieza.agot { background: #FDF3F5; }
+.pieza.agot .pz-img img, .pieza.agot .pz-img .emo { filter: grayscale(.9); opacity: .75; }
+.pieza.agot .pz-datos b { color: var(--texto-suave); }
+.pz-datos small.ag { color: #9A3F5B; font-weight: 700; }
+.pieza.agot.sel { background: #FFF6E6; }
+.sub-tit { margin-top: 8px; font-weight: 700; color: var(--acento); }
 .ped-lista { display: grid; gap: 10px; margin-top: 10px; max-height: 50vh; max-height: 50dvh; overflow-y: auto; }
 .articulo.resaltada { box-shadow: 0 0 0 3px var(--acento), 0 6px 20px rgba(138, 59, 78, .35); animation: pulso 1.1s ease-in-out 3; }
 @keyframes pulso { 50% { transform: scale(1.03); } }
@@ -461,13 +467,13 @@ function codificarPedido(items) {
     const a = ARTICULOS.find(x => x.nombre === it.nombre);
     if (!a) return null;
     const cuerpo = it.piezas ? it.piezas.map(i => a.piezas[i] ? hashTxt(a.piezas[i].nombre, 4) : "").filter(Boolean).join(".") : String(it.cant || 1);
-    return [hashTxt(a.nombre, 5), it.modo === "encargo" ? "e" : "n", cuerpo, it.nb || 0].join("_");
-  }).filter(Boolean).join("~");
+    return [hashTxt(a.nombre, 5), it.modo === "encargo" ? "e" : "n", cuerpo, it.nb || 0].join("-");
+  }).filter(Boolean).join("+");
 }
 const enlacePedido = items => location.href.split("#")[0] + "#pedido=" + codificarPedido(items);
 function decodificarPedido(txt) {
-  return txt.split("~").map(seg => {
-    const [h, m, cuerpo = "", nb] = seg.split("_");
+  return txt.split(/[~+]/).map(seg => {
+    const [h, m, cuerpo = "", nb] = seg.split(/[_-]/);
     const a = ARTICULOS.find(x => hashTxt(x.nombre, 5) === h);
     if (!a) return { faltante: true };
     const it = { nombre: a.nombre, modo: m === "e" ? "encargo" : "normal", nb: Number(nb) || 0 };
@@ -480,28 +486,38 @@ function decodificarPedido(txt) {
   });
 }
 
-/* Recibo en texto para WhatsApp: cada dato en su renglón (los *asteriscos* se ven en negrita en WhatsApp) */
+/* Si algún día quieres conservar las tildes en el mensaje de WhatsApp, cambia true por false */
+const MENSAJE_SIN_ACENTOS = true;
+const sinAcentos = t => String(t).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[¿¡]/g, "");
+
+/* Recibo en texto. estilo "bonito": con emojis y tildes (para verlo en pantalla, copiarlo o compartirlo).
+   Por defecto se arma en texto sencillo, que es el que va en el enlace de WhatsApp (los emojis pueden verse como «?»). */
 function mensajePedido(items, tipo = "pedido", extra = {}) {
+  const B = extra.estilo === "bonito";
+  const T = B ? (t => String(t ?? "")) : plano;
   const cs = items.map(it => ({ it, c: calcular(it) })).filter(x => x.c);
-  const SEP = "-----------------------";
-  const total = dinero(cs.reduce((s, x) => s + x.c.total, 0));
+  const SEP = B ? "━━━━━━━━━━━━━━" : "-----------------------";
+  const total = dinero(cs.reduce((acc, x) => acc + x.c.total, 0));
   const hayEnc = cs.some(x => x.it.modo === "encargo");
-  const tiempo = AJUSTES.encargo && AJUSTES.encargo.tiempo ? " - " + AJUSTES.encargo.tiempo : "";
-  const titulo = tipo === "yappy" ? "PAGO CON YAPPY" : tipo === "cotizacion" ? "COTIZACION" : "PEDIDO";
-  const L = [`*${titulo} - ${plano(negocio)}*`, "Fecha: " + new Date().toLocaleString("es", { dateStyle: "short", timeStyle: "short" })];
-  if (extra.ref) L.push("Ref: " + extra.ref);
-  if (extra.nombre) L.push("Cliente: " + plano(extra.nombre));
+  const tiempo = AJUSTES.encargo && AJUSTES.encargo.tiempo ? (B ? " · " : " - ") + AJUSTES.encargo.tiempo : "";
+  const nombresTipo = { pedido: ["PEDIDO", "🧾"], cotizacion: ["COTIZACION", "💬"], yappy: ["PAGO CON YAPPY", "💛"] }[tipo] || ["PEDIDO", "🧾"];
+  const titulo = B ? `${nombresTipo[1]} *${nombresTipo[0].replace("COTIZACION", "COTIZACIÓN")}* · ${negocio}` : `*${nombresTipo[0]} - ${plano(negocio)}*`;
+  const fecha = new Date().toLocaleString("es", { dateStyle: "short", timeStyle: "short" });
+  const L = [titulo, (B ? "📅 " : "Fecha: ") + fecha];
+  if (extra.ref) L.push((B ? "🔖 Ref: " : "Ref: ") + extra.ref);
+  if (extra.nombre) L.push((B ? "👤 Cliente: " : "Cliente: ") + T(extra.nombre));
   L.push(SEP, "");
+  const dato = l => B ? `   ▫️ ${T(l.t)}${l.v ? " — " + l.v : ""}` : `- ${T(l.t)}${l.v ? ": " + l.v : ""}`;
   cs.forEach(({ it, c }, i) => {
     const a = c.a;
-    L.push(`*${i + 1}) ${plano(a.nombre)}*`);
-    if (it.piezas) c.lineas.forEach(l => L.push(`- ${plano(l.t)}${l.v ? ": " + l.v : ""}`));
+    L.push(`*${i + 1}) ${T(a.nombre)}*`);
+    if (it.piezas) c.lineas.forEach(l => L.push(dato(l)));
     else {
-      L.push(`- ${c.unidades} x ${precio(a.precio)}: ${precio(c.subtotal)}`);
-      c.lineas.slice(1).forEach(l => L.push(`- ${plano(l.t)}${l.v ? ": " + l.v : ""}`));
+      L.push(dato({ t: `${c.unidades} x ${precio(a.precio)}`, v: precio(c.subtotal) }));
+      c.lineas.slice(1).forEach(l => L.push(dato(l)));
     }
-    L.push(it.modo === "encargo" ? `Pedido especial (agotado)${tiempo}` : "Disponible");
-    L.push(`Subtotal: *${precio(c.total)}*`, "");
+    L.push(it.modo === "encargo" ? `${B ? "   📦 " : ""}Pedido especial (agotado)${tiempo}` : `${B ? "   ✅ " : ""}Disponible`);
+    L.push(`${B ? "   " : ""}Subtotal: *${precio(c.total)}*`, "");
   });
   L.push(SEP, `*TOTAL: ${precio(total)}*`);
   if (hayEnc) L.push("_Incluye cargo por pedido especial._");
@@ -509,9 +525,11 @@ function mensajePedido(items, tipo = "pedido", extra = {}) {
   if (tipo === "yappy") L.push(`Ya pagué ${precio(total)} con Yappy. Te envío el comprobante.`);
   else if (tipo === "cotizacion") L.push("Solo quiero saber el precio final y si está disponible. ¡Gracias!");
   else L.push(hayEnc ? "¿Cuánto tardaría el pedido especial? ¡Gracias!" : "¿Está disponible? ¡Gracias!");
-  if (extra.nota) L.push("", "Mensaje: " + plano(extra.nota));
-  if (!extra.sinEnlace && cs.length) L.push("", "Ver este pedido en el catalogo:", enlacePedido(cs.map(x => x.it)));
-  return L.join("\n");
+  if (extra.nota) L.push("", (B ? "📝 *Mensaje:* " : "Mensaje: ") + T(extra.nota));
+  let texto = L.join("\n");
+  if (!B && MENSAJE_SIN_ACENTOS) texto = sinAcentos(texto);
+  if (!extra.sinEnlace && cs.length) texto += "\n\n" + (B ? "🔗 Ver este pedido en el catálogo:" : "Ver este pedido en el catalogo:") + "\n" + enlacePedido(cs.map(x => x.it));
+  return texto;
 }
 const urlWsp = msg => `https://wa.me/${whatsapp}?text=${encodeURIComponent(msg)}`;
 
@@ -641,6 +659,7 @@ function abrirRecibo(pedido) {
     <h2>🧾 Tu recibo</h2>
     <p class="aviso-pedido">Revisa tu pedido. Al enviarlo, me llega este mismo recibo por WhatsApp.</p>
     <div class="recibo" id="reciboVista"></div>
+    <p class="aviso-pedido" style="margin-top:-4px">Por WhatsApp se envía en texto sencillo (sin emojis) para que se vea bien en cualquier teléfono.</p>
     <div class="r-tipo">
       <label><input type="radio" name="rTipo" value="pedido" checked> Quiero comprar</label>
       <label><input type="radio" name="rTipo" value="cotizacion"> Solo quiero cotizar o preguntar</label>
@@ -657,10 +676,11 @@ function abrirRecibo(pedido) {
   try { q("rNombre").value = localStorage.getItem("jogopines_nombre") || ""; } catch (e) {}
   const datos = () => ({ tipo: (document.querySelector('input[name="rTipo"]:checked') || {}).value || "pedido", nombre: q("rNombre").value.trim(), nota: q("rNota").value.trim(), ref });
   const refrescar = () => {
-    const t = mensajePedido(lista, datos().tipo, datos());
-    q("reciboVista").innerHTML = esc(t).replace(/\*([^*\n]+)\*/g, "<b>$1</b>").replace(/_([^_\n]+)_/g, "<i>$1</i>");
-    if (q("rWsp")) q("rWsp").href = urlWsp(t);
-    return t;
+    const d = datos();
+    const bonito = mensajePedido(lista, d.tipo, { ...d, estilo: "bonito" });
+    q("reciboVista").innerHTML = esc(bonito).replace(/\*([^*\n]+)\*/g, "<b>$1</b>").replace(/^_(.+)_$/gm, "<i>$1</i>");
+    if (q("rWsp")) q("rWsp").href = urlWsp(mensajePedido(lista, d.tipo, d));   // en el enlace va el texto sencillo
+    return bonito;
   };
   ["input", "change"].forEach(ev => q("detalleRecibo").addEventListener(ev, e => {
     if (e.target.id === "rNombre") { try { localStorage.setItem("jogopines_nombre", e.target.value.trim()); } catch (er) {} }
@@ -766,14 +786,18 @@ function abrir(a) {
   const esP = esPack(a);
   const stock = stockDe(a);
   const pe = AJUSTES.encargo || {};
-  const esEncargo = stock <= 0 && encargoPosible(a);
+  const puedeEncargo = encargoPosible(a);
+  const esEncargo = !esP && stock <= 0 && puedeEncargo;          // artículo suelto agotado
   const modo = esEncargo ? "encargo" : "normal";
   const cat = infoCat(a);
-  const enCart = esP ? piezasEnCarrito(a, modo) : new Set();
+  const enCartN = esP ? piezasEnCarrito(a, "normal") : new Set();
+  const enCartE = esP ? piezasEnCarrito(a, "encargo") : new Set();
+  const enCart = i => enCartN.has(i) || enCartE.has(i);
+  const agotada = p => cantPieza(p) <= 0;
   const topeCant = esEncargo ? Math.max(1, Number(pe.maximo) || 10) : stock;
   const maxCant = esP ? 0 : topeCant - unidadesEnCarrito(a, modo);
   const puedeComprar = !!whatsapp || !!yappy.activo;
-  const libreP = (p, i) => puedeComprar && (esEncargo || cantPieza(p) > 0) && !enCart.has(i);
+  const libreP = (p, i) => puedeComprar && !enCart(i) && (!agotada(p) || puedeEncargo);
   const quedaAlgo = esP ? a.piezas.some(libreP) : maxCant > 0;
   const conBroche = !!(broche && broche.activo && a.broche);
   const extra = Number(broche && broche.precio) || 0;
@@ -783,28 +807,31 @@ function abrir(a) {
   const textoB = stockB0 === Infinity ? "" : stockB <= 0 ? "Agotados por ahora" : "Disponibles: " + stockB;
   const clsB = stockB <= 0 ? "agotado" : stockB <= 3 ? "pocas" : "disp";
   const medidas = (!esP && verMed(a) && a.medidas) ? `<div class="medidas">📏 Medidas: ${esc(a.medidas)}</div>` : "";
+  const hayAgotadas = esP && puedeEncargo && a.piezas.some(agotada);
   let cant = 1, nb = 0, nbManual = false;
   const sel = new Set();
 
   const piezasHTML = !esP ? "" : `
     <div class="piezas-tit">Elige tus pines</div>
+    ${hayAgotadas ? '<p class="aviso-pedido" style="margin-top:2px">Los pines <b>agotados</b> también los puedes elegir: se piden por encargo.</p>' : ""}
     <div class="piezas efecto-${esc(AJUSTES.efectoPack || "elegidos")}" id="piezas">
     ${a.piezas.map((p, i) => {
       const libre = libreP(p, i);
-      const nota = enCart.has(i) ? "En tu carrito" : (!esEncargo && cantPieza(p) <= 0) ? "Agotado" : "";
+      const ag = agotada(p);
+      const nota = enCart(i) ? "En tu carrito" : ag ? (puedeEncargo ? "Agotado · se puede encargar" : "Agotado") : "";
       const em = esc(emojiDe(a));
       const img = p.imagen
         ? `<img src="${esc(p.imagen)}" alt="${esc(p.nombre)}" data-e="${em}" onerror="this.outerHTML='<span class=emo>'+this.dataset.e+'</span>'">`
         : `<span class="emo">${em}</span>`;
-      return `<label class="pieza${libre ? "" : " off"}" data-i="${i}">
+      return `<label class="pieza${libre ? "" : " off"}${ag ? " agot" : ""}" data-i="${i}">
         <input type="checkbox" data-i="${i}"${libre ? "" : " disabled"}>
         <span class="pz-img" style="background:${colorDe(a)}">${img}<i class="visto">✓</i></span>
-        <span class="pz-datos"><b>${esc(p.nombre)}</b>${verMed(a) && p.medidas ? `<small>📏 ${esc(p.medidas)}</small>` : ""}${nota ? `<small>${nota}</small>` : ""}</span>
+        <span class="pz-datos"><b>${esc(p.nombre)}</b>${verMed(a) && p.medidas ? `<small>📏 ${esc(p.medidas)}</small>` : ""}${nota ? `<small class="${ag ? "ag" : ""}">${nota}</small>` : ""}</span>
         <span class="pz-precio">${precio(precioPieza(a, p))}</span>
       </label>`;
     }).join("")}
     </div>
-    <label class="todos"><input type="checkbox" id="chkTodos"> Seleccionar todos</label>`;
+    <label class="todos"><input type="checkbox" id="chkTodos"> Seleccionar todos los disponibles</label>`;
 
   detalle.innerHTML = `${fotoHTML(a)}
     <div class="meta"><span class="cat">${esc((cat.emoji ? cat.emoji + " " : "") + (a.categoria || ""))}</span><span class="estado ${e.cls}">${e.txt}</span></div>
@@ -818,12 +845,13 @@ function abrir(a) {
   document.getElementById("cerrar").addEventListener("click", () => ventana.close());
 
   const ped = document.getElementById("pedido");
-  if (puedeComprar && !quedaAlgo && stock > 0) {
-    ped.innerHTML = '<p class="aviso-pedido">Ya tienes en tu carrito todo lo disponible de este artículo.</p>';
+  if (puedeComprar && !quedaAlgo && (stock > 0 || puedeEncargo)) {
+    ped.innerHTML = '<p class="aviso-pedido">Ya tienes en tu carrito todo lo que se puede pedir de este artículo.</p>';
   } else if (puedeComprar && quedaAlgo) {
     const tiempo = pe.tiempo ? ` Tiempo estimado: ${esc(pe.tiempo)}.` : "";
+    const cajaEncargo = `<div class="encargo"><b>📦 ${esP ? "Pedido especial (pines agotados)" : "Agotado, pero puedes encargarlo"}</b><p>${esc(pe.texto || "")}${tiempo}</p></div>`;
     ped.innerHTML = `
-      ${esEncargo ? `<div class="encargo"><b>📦 Agotado, pero puedes encargarlo</b><p>${esc(pe.texto || "")}${tiempo}</p></div>` : ""}
+      <div id="boxEnc">${esEncargo ? cajaEncargo : ""}</div>
       ${conBroche ? `<div class="broche${hayBroche ? "" : " off"}">
         <label><input type="checkbox" id="chk"${hayBroche ? "" : " disabled"}>
           <span><b>Agregar broche de seguridad${extra > 0 ? " (+" + precio(extra) + " c/u)" : ""}</b><br><small>${esc(broche.texto)}</small></span></label>
@@ -846,9 +874,17 @@ function abrir(a) {
     const btnAdd = document.getElementById("btnAdd");
     const lnkPedir = document.getElementById("pedir");
     const btnYI = document.getElementById("btnYappyItem");
-    const itemActual = () => esP
-      ? { nombre: a.nombre, modo, piezas: [...sel].sort((x, y) => x - y), nb }
-      : { nombre: a.nombre, modo, cant, nb };
+    // Lo elegido puede ser una o dos líneas: pines disponibles y pines agotados (estos por encargo)
+    const itemsActuales = () => {
+      if (!esP) return [{ nombre: a.nombre, modo, cant, nb }];
+      const idx = [...sel].sort((x, y) => x - y);
+      const normales = idx.filter(i => !agotada(a.piezas[i])), enc = idx.filter(i => agotada(a.piezas[i]));
+      const out = [];
+      if (normales.length) out.push({ nombre: a.nombre, modo: "normal", piezas: normales, nb });
+      if (enc.length) out.push({ nombre: a.nombre, modo: "encargo", piezas: enc, nb: normales.length ? 0 : nb });
+      return out;
+    };
+    const normalesLibres = () => a.piezas.map((p, i) => i).filter(i => libreP(a.piezas[i], i) && !agotada(a.piezas[i]));
 
     const actualizar = () => {
       const con = !!(chk && chk.checked);
@@ -858,23 +894,30 @@ function abrir(a) {
         const cont = document.getElementById("piezas");
         cont.classList.toggle("hay-sel", sel.size > 0);
         cont.querySelectorAll(".pieza").forEach(l => l.classList.toggle("sel", sel.has(Number(l.dataset.i))));
-        const libres = a.piezas.map((p, i) => i).filter(i => libreP(a.piezas[i], i));
+        const libres = normalesLibres();
         const todos = document.getElementById("chkTodos");
         todos.disabled = !libres.length;
         todos.checked = libres.length > 0 && libres.every(i => sel.has(i));
         todos.indeterminate = sel.size > 0 && !todos.checked;
       } else document.getElementById("cant").textContent = cant;
-      const c = (esP && !sel.size) ? null : calcular(itemActual());
-      document.getElementById("total").textContent = "Total: " + precio(c ? c.total : 0);
-      document.getElementById("desglose").innerHTML = (c && (esP || c.lineas.length > 1))
-        ? c.lineas.map(l => `<div><span>${esc(l.t)}</span><span>${l.v || ""}</span></div>`).join("") : "";
-      if (btnAdd) btnAdd.disabled = !c;
-      if (btnYI) btnYI.disabled = !c;
+      const its = itemsActuales();
+      const hay = its.length > 0;
+      const cs = its.map(it => ({ it, c: calcular(it) })).filter(x => x.c);
+      const total = dinero(cs.reduce((acc, x) => acc + x.c.total, 0));
+      const hayEnc = its.some(it => it.modo === "encargo");
+      document.getElementById("boxEnc").innerHTML = (esEncargo || (esP && hayEnc)) ? cajaEncargo : "";
+      document.getElementById("total").textContent = "Total: " + precio(total);
+      const muchas = cs.length > 1;
+      document.getElementById("desglose").innerHTML = (hay && (esP || (cs[0] && cs[0].c.lineas.length > 1)))
+        ? cs.map(({ it, c }) => (muchas && it.modo === "encargo" ? '<div class="sub-tit">Por encargo (agotado)</div>' : "")
+            + c.lineas.map(l => `<div><span>${esc(l.t)}</span><span>${l.v || ""}</span></div>`).join("")).join("") : "";
+      if (btnAdd) btnAdd.disabled = !hay;
+      if (btnYI) btnYI.disabled = !hay;
       if (lnkPedir) {
-        lnkPedir.classList.toggle("off", !c);
-        if (c) lnkPedir.href = urlWsp(mensajePedido([itemActual()])); else lnkPedir.removeAttribute("href");
+        lnkPedir.classList.toggle("off", !hay);
+        if (hay) lnkPedir.href = urlWsp(mensajePedido(its)); else lnkPedir.removeAttribute("href");
       }
-      document.getElementById("avisoPedido").textContent = c ? "" : "Elige al menos un pin para continuar.";
+      document.getElementById("avisoPedido").textContent = hay ? "" : "Elige al menos un pin para continuar.";
     };
 
     if (esP) {
@@ -884,8 +927,8 @@ function abrir(a) {
         actualizar();
       });
       document.getElementById("chkTodos").addEventListener("change", ev => {
-        a.piezas.forEach((p, i) => { if (libreP(p, i)) { if (ev.target.checked) sel.add(i); else sel.delete(i); } });
-        document.querySelectorAll("#piezas input[type=checkbox]:not(:disabled)").forEach(x => { x.checked = ev.target.checked; });
+        normalesLibres().forEach(i => { if (ev.target.checked) sel.add(i); else sel.delete(i); });
+        document.querySelectorAll("#piezas input[type=checkbox]").forEach(x => { x.checked = sel.has(Number(x.dataset.i)); });
         actualizar();
       });
     } else {
@@ -897,10 +940,11 @@ function abrir(a) {
       document.getElementById("menosb").addEventListener("click", () => { nb--; nbManual = true; actualizar(); });
       document.getElementById("masb").addEventListener("click", () => { nb++; nbManual = true; actualizar(); });
     }
-    if (btnYI) btnYI.addEventListener("click", () => { if (!(esP && !sel.size)) abrirYappy([itemActual()]); });
+    if (btnYI) btnYI.addEventListener("click", () => { const its = itemsActuales(); if (its.length) abrirYappy(its); });
     if (btnAdd) btnAdd.addEventListener("click", () => {
-      if (esP && !sel.size) return;
-      agregarAlCarrito(itemActual());
+      const its = itemsActuales();
+      if (!its.length) return;
+      its.forEach(it => agregarAlCarrito(it));
       ventana.close();
     });
     actualizar();
