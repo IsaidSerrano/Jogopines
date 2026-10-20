@@ -955,7 +955,8 @@ function abrir(a) {
 ventana.addEventListener("click", e => { if (e.target === ventana) ventana.close(); });
 
 /* ---------- Inventario desde una hoja de cálculo (Google Sheets publicada como CSV) ---------- */
-const normTxt = s => String(s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+// Compara nombres sin importar mayúsculas, tildes, emojis ni signos (así «Vic Vaporub 🧴» y «vic vaporub» son el mismo)
+const normTxt = s => String(s ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, "").replace(/\s+/g, " ").trim();
 const NOMBRES_BROCHE = ["broche de seguridad", "broche", "broches"];
 function parseCSV(t) {
   const filas = []; let fila = [], celda = "", comillas = false;
