@@ -92,6 +92,8 @@ dialog { max-height: 92vh; overflow-y: auto; }
 .pz-pegar summary { cursor: pointer; color: var(--suave); }
 .pz-pegar textarea { margin: 6px 0; }
 .pz-box > label { display: block; font-weight: 600; margin-top: 8px; }
+.pz-rapido input { width: 64px; display: inline-block; margin: 0 4px; }
+.pz-barra { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 </style>
 </head>
 <body>
@@ -184,7 +186,7 @@ dialog { max-height: 92vh; overflow-y: auto; }
       <h3>Inventario en tu hoja de cálculo</h3>
       <p>Lleva tu inventario en una hoja de Google Sheets (puedes usar la plantilla <code>inventario-jogopines.xlsx</code>). Publica la hoja <b>Catalogo</b> como CSV, pega el enlace en <b>Negocio y contacto → Inventario en hoja de cálculo</b> y presiona <b>🔎 Probar enlace</b>. Desde ahí, la cantidad y el precio del catálogo salen de la hoja y se actualizan en unos minutos, sin volver a subir la carpeta. El <b>nombre</b> del pin debe ser igual en la hoja y en el editor. Con la plantilla nueva también se controlan las <b>piezas de los packs</b> (filas «Pack | Pieza»): cuando vendes una pieza por fuera y la anotas en la hoja Ventas, deja de salir disponible en el catálogo.</p>
       <h3>Packs: elegir pin por pin</h3>
-      <p>En el formulario de un artículo (✏️) abre <b>📦 Piezas del pack</b> y agrega cada pin con su nombre y medidas (o pega una lista, una por línea: <code>Peter 1: 2.8 × 3.6 cm</code>). El cliente marca los que quiere (o «Seleccionar todos») y el precio cambia. Cada pieza cuesta el precio del artículo, que es <b>por pin</b>, salvo que le pongas otro precio. Si quieres un precio especial por llevar todo, ponlo en «Precio si se llevan todas». Para marcar un pin como vendido, pon su cantidad en 0. En <b>Negocio y contacto</b> eliges el efecto visual de la selección.</p>
+      <p>En el formulario de un artículo (✏️) abre <b>📦 Piezas del pack</b> y escribe cuántos pines trae y presiona <b>Crear</b>: se hacen «Pin 1», «Pin 2»... que luego puedes renombrar y completar con sus medidas. El cliente marca los que quiere (o «Seleccionar todos») y el precio cambia. Cada pieza cuesta el precio del artículo, que es <b>por pin</b>, salvo que le pongas otro precio. Si quieres un precio especial por llevar todo, ponlo en «Precio si se llevan todas». Para marcar un pin como vendido, pon su cantidad en 0. En <b>Negocio y contacto</b> eliges el efecto visual de la selección.</p>
       <h3>Carrito de compras</h3>
       <p>El cliente agrega pines al carrito y lo ve a un costado, con el desglose de cada artículo y el total. Desde ahí pide todo por WhatsApp o paga con Yappy. Se puede ocultar en <b>Negocio y contacto → Carrito de compras</b>.</p>
       <h3>Pago con Yappy</h3>
@@ -229,11 +231,15 @@ dialog { max-height: 92vh; overflow-y: auto; }
     </div>
     <details class="pz-box" id="fPiezasBox">
       <summary>📦 Piezas del pack (opcional)</summary>
-      <p class="pz-nota">Si este artículo es un pack, agrega cada pin con su nombre y medidas: el cliente podrá elegir cuáles llevar y el precio cambia según su elección. Cada pieza cuesta el <b>Precio</b> de arriba (por pin), salvo que le pongas otro. La <b>cantidad</b> del artículo se calcula sola sumando las piezas disponibles.</p>
+      <p class="pz-nota">Si este artículo es un pack, escribe cuántos pines trae y presiona <b>Crear</b>: se hacen «Pin 1», «Pin 2», «Pin 3»... Después puedes cambiarles el nombre y ponerles sus medidas. El cliente podrá elegir cuáles llevar y el precio cambia según su elección. Cada pieza cuesta el <b>Precio</b> de arriba (por pin), salvo que le pongas otro. La <b>cantidad</b> del artículo se calcula sola sumando las piezas disponibles.</p>
       <div class="pz-tabla" id="fPiezas"></div>
-      <div class="pz-barra"><button type="button" id="fAddPieza">+ Agregar pieza</button> <button type="button" id="fDesdeMedidas" title="Crea las piezas leyendo el campo Medidas de arriba">Crear piezas desde el campo Medidas</button></div>
-      <details class="pz-pegar"><summary>Pegar una lista de piezas</summary>
-        <textarea id="fPegar" rows="4" placeholder="Una pieza por línea. Ejemplo:&#10;Peter 1: 2.8 × 3.6 cm&#10;Peter 2: 4.1 × 3 cm"></textarea>
+      <div class="pz-barra">
+        <span class="pz-rapido">Crear <input type="number" id="fNPiezas" min="1" max="60" value="3"> pines de una vez <button type="button" id="fCrearN">Crear</button></span>
+        <button type="button" id="fAddPieza">+ Agregar una pieza</button>
+      </div>
+      <details class="pz-pegar"><summary>Pegar una lista de nombres (opcional)</summary>
+        <p class="pz-nota" style="margin:6px 0">Si ya tienes los nombres escritos, pégalos aquí, uno por línea. Si quieres, agrega las medidas así: «Nombre: 3 × 3 cm».</p>
+        <textarea id="fPegar" rows="4" placeholder="Una pieza por línea. Ejemplo:&#10;Pin sol: 3 × 3 cm&#10;Pin luna: 3 × 3.2 cm"></textarea>
         <button type="button" id="fCrearPiezas">Crear piezas con esta lista</button></details>
       <label>Precio si se llevan todas (opcional)<input id="fPrecioPack" type="number" min="0" step="0.01" placeholder="ej. 5.00 (vacío = suma de las piezas)"></label>
     </details>
@@ -640,8 +646,8 @@ function renderPiezasForm() {
   }
   fPz.forEach((p, i) => {
     const fila = document.createElement("div"); fila.className = "pz-fila";
-    const nom = campo(p, "nombre", { local: true }); nom.placeholder = "ej. Peter 1";
-    const med = campo(p, "medidas", { local: true }); med.placeholder = "ej. 2.8 × 3.6 cm";
+    const nom = campo(p, "nombre", { local: true }); nom.placeholder = "Pin " + (i + 1);
+    const med = campo(p, "medidas", { local: true }); med.placeholder = "ej. 3 × 3.2 cm";
     const pre = document.createElement("input"); pre.type = "number"; pre.min = 0; pre.step = "0.01"; pre.placeholder = "= pin"; pre.value = p.precio ?? "";
     pre.addEventListener("input", () => { p.precio = pre.value.trim() === "" ? "" : Number(pre.value); });
     const can = campo(p, "cantidad", { tipo: "number", local: true, alCambiar: sincCantidadForm });
@@ -652,22 +658,25 @@ function renderPiezasForm() {
   });
   sincCantidadForm();
 }
+function nombreLibre() {            // «Pin 1», «Pin 2»... sin repetir ninguno que ya exista
+  const usados = new Set(fPz.map(p => normTxt(p.nombre || "")));
+  let n = 1; while (usados.has(normTxt("Pin " + n))) n++;
+  return "Pin " + n;
+}
 $("fAddPieza").addEventListener("click", () => {
-  fPz.push({ nombre: "", medidas: "", imagen: "", precio: "", cantidad: 1 });
+  fPz.push({ nombre: nombreLibre(), medidas: "", imagen: "", precio: "", cantidad: 1 });
   $("fPiezasBox").open = true; renderPiezasForm();
   const filas = $("fPiezas").querySelectorAll(".pz-fila:not(.pz-cab)");
-  filas[filas.length - 1].querySelector("input").focus();
+  const campo1 = filas[filas.length - 1].querySelector("input"); campo1.focus(); campo1.select();
+});
+$("fCrearN").addEventListener("click", () => {
+  const n = Math.min(60, Math.max(1, Math.floor(Number($("fNPiezas").value) || 0)));
+  for (let k = 0; k < n; k++) fPz.push({ nombre: nombreLibre(), medidas: "", imagen: "", precio: "", cantidad: 1 });
+  $("fPiezasBox").open = true; renderPiezasForm();
 });
 $("fCrearPiezas").addEventListener("click", () => {
   parsePiezas($("fPegar").value).forEach(p => fPz.push({ ...p, imagen: "", precio: "", cantidad: 1 }));
   $("fPegar").value = ""; renderPiezasForm();
-});
-$("fDesdeMedidas").addEventListener("click", () => {
-  const ps = parsePiezas($("fMedidas").value).filter(p => p.medidas);
-  if (!ps.length) { $("fError").textContent = "No encontré piezas en el campo Medidas. Debe verse así: «Peter 1: 2.8 × 3.6 cm Peter 2: 4.1 × 3 cm»."; return; }
-  $("fError").textContent = "";
-  ps.forEach(p => fPz.push({ ...p, imagen: "", precio: "", cantidad: 1 }));
-  $("fPiezasBox").open = true; renderPiezasForm();
 });
 $("fFoto").addEventListener("change", () => {
   fArchivo = $("fFoto").files[0] || null;
@@ -681,6 +690,10 @@ async function guardarFormulario(otro) {
   const nombre = $("fNombre").value.trim();
   if (!nombre) { $("fError").textContent = "Escribe el nombre del artículo."; $("fNombre").focus(); return; }
   if (!$("fCat").value) { $("fError").textContent = "Elige una categoría (si no hay, créala en la pestaña Categorías)."; return; }
+  const nombresPz = fPz.map((p, k) => (p.nombre || "").trim() || "Pin " + (k + 1));
+  const vistos = new Set(), repetidos = [];
+  nombresPz.forEach(n => { const k = normTxt(n); if (vistos.has(k)) repetidos.push(n); vistos.add(k); });
+  if (repetidos.length) { $("fError").textContent = "Hay piezas con el mismo nombre: " + [...new Set(repetidos)].join(", ") + ". Cada pin del pack debe llamarse distinto."; return; }
   const botones = [$("fGuardar"), $("fOtro"), $("fCancelar")];
   botones.forEach(b => { b.disabled = true; });
   try {
@@ -692,8 +705,8 @@ async function guardarFormulario(otro) {
       descripcion: $("fDesc").value.trim(), medidas: $("fMedidas").value.trim(),
       verMedidas: $("fVerMedidas").checked, broche: $("fBroche").checked, encargo: $("fEncargo").checked
     });
-    const pz = fPz.filter(p => (p.nombre || "").trim()).map(p => {
-      const q = { nombre: p.nombre.trim(), medidas: (p.medidas || "").trim(), imagen: (p.imagen || "").trim(), cantidad: Math.max(0, Math.floor(Number(p.cantidad ?? 1) || 0)) };
+    const pz = fPz.map((p, k) => {
+      const q = { nombre: nombresPz[k], medidas: (p.medidas || "").trim(), imagen: (p.imagen || "").trim(), cantidad: Math.max(0, Math.floor(Number(p.cantidad ?? 1) || 0)) };
       if (p.precio !== "" && p.precio != null) q.precio = Number(p.precio);
       return q;
     });
@@ -892,70 +905,26 @@ function aNumero(v) {
   return Number.isFinite(n) ? n : null;
 }
 async function leerHoja(url) {
-  const enlace = new URL(String(url).trim());
-
-  if (
-    enlace.protocol !== "https:" ||
-    enlace.hostname !== "script.google.com" ||
-    !/^\/macros\/s\/[^/]+\/exec$/.test(enlace.pathname)
-  ) {
-    throw new Error(
-      "Pega la URL de la aplicación web de Apps Script que termina en /exec"
-    );
-  }
-
-  return new Promise((resolve, reject) => {
-    const nombre = "jpHoja_" +
-      Date.now().toString(36) + "_" +
-      Math.random().toString(36).slice(2);
-
-    const script = document.createElement("script");
-    let terminado = false;
-    let temporizador;
-
-    function terminar(error, resultado) {
-      if (terminado) return;
-      terminado = true;
-      clearTimeout(temporizador);
-      script.remove();
-      delete window[nombre];
-
-      if (error) reject(error);
-      else resolve(resultado);
-    }
-
-    window[nombre] = resultado => {
-      if (resultado?.error) {
-        terminar(new Error(resultado.error));
-      } else if (
-        !Array.isArray(resultado?.datos) ||
-        !resultado?.columnas
-      ) {
-        terminar(new Error("La hoja devolvió una respuesta no válida."));
-      } else {
-        terminar(null, resultado);
-      }
-    };
-
-    temporizador = setTimeout(() => {
-      terminar(new Error(
-        "La hoja tardó demasiado. Revisa la implementación y vuelve a probar."
-      ));
-    }, 25000);
-
-    script.onerror = () => {
-      terminar(new Error(
-        "No se pudo conectar. Revisa que la aplicación web permita acceso a cualquier usuario."
-      ));
-    };
-
-    enlace.searchParams.set("callback", nombre);
-    enlace.searchParams.set("_", Date.now().toString());
-
-    script.src = enlace.href;
-    script.async = true;
-    document.head.appendChild(script);
-  });
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), 8000);
+  try {
+    const r = await fetch(url, { signal: ctl.signal, cache: "no-store" });
+    if (!r.ok) throw new Error("respuesta " + r.status);
+    const filas = parseCSV(await r.text()).filter(f => f.some(c => c.trim() !== ""));
+    if (!filas.length) throw new Error("la hoja está vacía");
+    const cab = filas[0].map(normTxt);
+    const col = alias => cab.findIndex(h => alias.includes(h));
+    const iN = col(["nombre", "articulo", "producto", "pin"]);
+    const iC = col(["cantidad", "stock", "existencias", "quedan", "disponibles"]);
+    const iP = col(["precio", "precio de venta", "precio venta", "pvp"]);
+    if (iN < 0) throw new Error("no encontré una columna llamada «nombre»");
+    const datos = filas.slice(1)
+      .map(f => ({ nombre: (f[iN] || "").trim(), cantidad: iC >= 0 ? aNumero(f[iC]) : null, precio: iP >= 0 ? aNumero(f[iP]) : null }))
+      .filter(x => x.nombre);
+    return { datos, columnas: { cantidad: iC >= 0, precio: iP >= 0 } };
+  } catch (err) {
+    throw new Error(err.name === "AbortError" ? "tardó demasiado en responder" : err.message);
+  } finally { clearTimeout(t); }
 }
 function aplicarHoja(res, articulos, ajustes) {
   const mapa = new Map(res.datos.map(x => [normTxt(x.nombre), x]));
