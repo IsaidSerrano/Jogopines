@@ -56,6 +56,7 @@ const AJUSTES = {
 const CATEGORIAS = [{"nombre":"Música","emoji":"🎵"},{"nombre":"Anime","emoji":"🌸"},{"nombre":"Juegos","emoji":"🎮"},{"nombre":"Series","emoji":"📺"},{"nombre":"Películas","emoji":"🎬"},{"nombre":"Otros","emoji":"✨"}];
 
 const ARTICULOS = [
+  {"nombre":"Vaquero al atardecer 🤠","categoria":"Otros","precio":2,"cantidad":1,"broche":true,"medidas":"3 x 1.8 cm","verMedidas":true,"encargo":true,"imagen":"Fotos/d6c4bcad-5182-4c6b-b5de-3cb67e527192.avif","descripcion":"Una última cabalgata antes de que el sol se esconda en el viejo oeste. 🌅"},
   {"nombre":"Agente P 🕵️","categoria":"Series","precio":2.25,"cantidad":1,"broche":true,"medidas":"3.5 × 3.5 cm","verMedidas":true,"encargo":true,"imagen":"Fotos/5d0a279868e146a5b794b4b359257151-goods.avif","descripcion":"Sombrero puesto, identidad secreta activada y otro plan de Doofenshmirtz por arruinar. 🦫"},
   {"nombre":"Riddikulus 🪄","categoria":"Películas","precio":2.5,"cantidad":1,"broche":true,"medidas":"3 × 1.3 cm","verMedidas":true,"encargo":true,"imagen":"Fotos/b5a505ba-e412-4459-b126-93d546866023.avif","descripcion":"Hasta los boggarts dejan de dar miedo cuando el hechizo los vuelve ridículos. ✨"},
   {"nombre":"La suma de Gauss 🧮","categoria":"Otros","precio":2.25,"cantidad":1,"broche":true,"medidas":"3.5 × 1.7 cm","verMedidas":true,"encargo":true,"imagen":"Fotos/5e3d19bd-4521-4a83-81b0-9b1547afbbc5.avif","descripcion":"Para qué sumar uno por uno cuando una fórmula puede hacerlo todo. 🔢"},
