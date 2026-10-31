@@ -1,7 +1,7 @@
 // Datos del catálogo. Se genera solo desde editor.html: no hace falta editarlo a mano.
 const AJUSTES = {
   "negocio": "Jogopines",
-  "logo": "fotos/logo.png",
+  "logo": "Fotos/Jogopines_Original.png",
   "lineas": [
     "Pines, llaveros, figuras y más!!",
     "¿Quieres algo para ti? Pídelo con nosotros!!",
