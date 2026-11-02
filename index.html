@@ -89,6 +89,14 @@ header .lineas p:first-child { color: var(--texto); font-weight: 700; font-size:
 .estado.disp    { background: var(--p2); color: #2F6B50; }
 .estado.pocas   { background: var(--p3); color: #8A5A12; }
 .estado.agotado { background: var(--p1); color: #9A3F5B; }
+.estado.camino { background: #E2ECFA; color: #355D86; }
+.filtros-estado { margin: 18px auto 0; }
+.filtros:not(.filtros-estado) { margin-top: 12px; }
+.filtros-estado button { font-size: .92rem; }
+.estados-art { display: flex; align-items: center; justify-content: flex-end; gap: 4px; flex-wrap: wrap; }
+.aviso-camino { margin-top: 14px; padding: 11px 13px; border: 1px solid #C9D9EE; border-radius: 12px; background: #F0F5FC; color: var(--texto); }
+.aviso-camino p { margin-top: 4px; font-size: .92rem; }
+.aviso-camino a { display: inline-block; margin-top: 8px; color: #355D86; font-weight: 700; text-decoration: underline; }
 
 /* Ventana de detalle */
 dialog {
@@ -98,7 +106,7 @@ dialog {
 dialog::backdrop { background: rgba(58, 51, 80, .5); }
 .detalle { padding: 16px 16px 22px; }
 .detalle .foto { font-size: 4.5rem; }
-.detalle .meta { display: flex; gap: 8px; align-items: center; margin-top: 14px; }
+.detalle .meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
 .detalle .cat { font-size: .78rem; font-weight: 700; padding: 2px 10px; border-radius: 999px; background: var(--p5); }
 .detalle h2 { margin-top: 6px; font-size: 1.35rem; }
 .detalle .precio { font-size: 1.2rem; margin: 2px 0 8px; }
@@ -352,6 +360,7 @@ body.sin-deco { background-image: none; }
   <div class="enlaces" id="enlaces"></div>
 </header>
 
+<nav class="filtros filtros-estado" id="filtrosEstado" aria-label="Disponibilidad"></nav>
 <nav class="filtros" id="filtros" aria-label="Categorías"></nav>
 <main class="cuadricula" id="cuadricula"></main>
 <div class="deco-pie" aria-hidden="true"><svg class="mini m1" viewBox="0 0 24 24"><use href="#estrella"/></svg><svg class="dp" viewBox="0 0 200 110"><use href="#capi-duerme"/></svg><svg class="mini m2" viewBox="0 0 24 24"><use href="#corazon"/></svg></div>
@@ -420,19 +429,42 @@ const nombresCat = CATEGORIAS.map(c => c.nombre);
 const infoCat    = a => CATEGORIAS.find(c => c.nombre === a.categoria) || {};
 const emojiDe    = a => infoCat(a).emoji || "📌";
 const colorDe    = a => "var(--p" + ((Math.max(0, nombresCat.indexOf(a.categoria)) % 5) + 1) + ")";
-const encargoPosible = a => !!(AJUSTES.encargo && AJUSTES.encargo.activo && a.encargo !== false && whatsapp);
+const encargoPosible = a => !a.enCamino && !!(AJUSTES.encargo && AJUSTES.encargo.activo && a.encargo !== false && whatsapp);
 const verMed     = a => !!(AJUSTES.mostrarMedidas && a.verMedidas !== false);
 const esPack     = a => Array.isArray(a.piezas) && a.piezas.length > 0;
 const cantPieza  = p => Math.max(0, Number(p.cantidad ?? 1) || 0);
 const stockDe    = a => esPack(a) ? a.piezas.reduce((s, p) => s + cantPieza(p), 0) : (a.cantidad ?? 99);
 const precioPieza = (a, p) => (p.precio !== undefined && p.precio !== null && p.precio !== "") ? Number(p.precio) : Number(a.precio || 0);
 let filtro = "Todo";
+let filtroEstado = "Todos";
 
 function estado(a) {
   const c = stockDe(a);
+  if (c <= 0 && a.enCamino) return { txt: "En camino", cls: "camino" };
   if (c <= 0) return { txt: encargoPosible(a) ? "Agotado · por encargo" : "Agotado", cls: "agotado" };
   if (c <= 3) return { txt: "Últimas " + c, cls: "pocas" };
   return { txt: "Disponible", cls: "disp" };
+}
+
+function coincideEstado(a) {
+  const c = stockDe(a);
+  if (filtroEstado === "Disponibles") return c > 0;
+  if (filtroEstado === "En camino") return !!a.enCamino;
+  if (filtroEstado === "Agotados") return c <= 0 && !a.enCamino;
+  return true;
+}
+
+function pintarFiltrosEstado() {
+  const cont = document.getElementById("filtrosEstado");
+  cont.innerHTML = "";
+  ["Disponibles", "En camino", "Agotados", "Todos"].forEach(nombre => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = nombre === "En camino" ? "📦 " + nombre : nombre;
+    if (nombre === filtroEstado) b.className = "activo";
+    b.addEventListener("click", () => { filtroEstado = nombre; pintarFiltrosEstado(); pintarCuadricula(); });
+    cont.appendChild(b);
+  });
 }
 
 function fotoHTML(a) {
@@ -459,6 +491,7 @@ function pintarCuadricula() {
   cuadricula.innerHTML = "";
   ARTICULOS.forEach(a => {
     if (filtro !== "Todo" && a.categoria !== filtro) return;
+    if (!coincideEstado(a)) return;
     const e = estado(a);
     const boton = document.createElement("button");
     boton.className = "articulo" + (e.cls === "agotado" ? " sin-stock" : "");
@@ -466,11 +499,11 @@ function pintarCuadricula() {
     boton.innerHTML = `${fotoHTML(a)}
       <div class="nombre">${esc(a.nombre)}</div>
       ${esPack(a) ? '<div class="sub">📦 Pack · elige tus pines</div>' : ""}
-      <div class="fila"><span class="precio">${precio(a.precio)}${esPack(a) ? " c/u" : ""}</span><span class="estado ${e.cls}">${e.txt}</span></div>`;
+      <div class="fila"><span class="precio">${precio(a.precio)}${esPack(a) ? " c/u" : ""}</span><span class="estados-art"><span class="estado ${e.cls}">${e.txt}</span>${a.enCamino && stockDe(a) > 0 ? '<span class="estado camino">Más en camino</span>' : ""}</span></div>`;
     boton.addEventListener("click", () => abrir(a));
     cuadricula.appendChild(boton);
   });
-  if (!cuadricula.children.length) cuadricula.innerHTML = '<div class="vacio"><svg class="capi-vacio" viewBox="0 0 200 110" aria-hidden="true"><use href="#capi-duerme"/></svg><p>Aún no hay artículos en esta categoría.</p></div>';
+  if (!cuadricula.children.length) cuadricula.innerHTML = '<div class="vacio"><svg class="capi-vacio" viewBox="0 0 200 110" aria-hidden="true"><use href="#capi-duerme"/></svg><p>No hay artículos que coincidan con este filtro.</p></div>';
 }
 
 /* ---------- Cálculo de precios (lo usan la ventana del pin y el carrito) ---------- */
@@ -959,6 +992,7 @@ function abrir(a) {
   const stock = stockDe(a);
   const pe = AJUSTES.encargo || {};
   const puedeEncargo = encargoPosible(a);
+  const enCaminoSinStock = !!a.enCamino && stock <= 0;
   const esEncargo = !esP && stock <= 0 && puedeEncargo;          // artículo suelto agotado
   const modo = esEncargo ? "encargo" : "normal";
   const cat = infoCat(a);
@@ -969,7 +1003,7 @@ function abrir(a) {
   const topeCant = esEncargo ? Math.max(1, Number(pe.maximo) || 10) : stock;
   const maxCant = esP ? 0 : topeCant - unidadesEnCarrito(a, modo);
   const puedeComprar = !!whatsapp || !!yappy.activo;
-  const libreP = (p, i) => puedeComprar && !enCart(i) && (!agotada(p) || puedeEncargo);
+  const libreP = (p, i) => puedeComprar && !enCart(i) && (!agotada(p) || (puedeEncargo && !a.enCamino));
   const quedaAlgo = esP ? a.piezas.some(libreP) : maxCant > 0;
   const conBroche = !!(broche && broche.activo && a.broche);
   const extra = Number(broche && broche.precio) || 0;
@@ -979,7 +1013,9 @@ function abrir(a) {
   const textoB = stockB0 === Infinity ? "" : stockB <= 0 ? "Agotados por ahora" : "Disponibles: " + stockB;
   const clsB = stockB <= 0 ? "agotado" : stockB <= 3 ? "pocas" : "disp";
   const medidas = (!esP && verMed(a) && a.medidas) ? `<div class="medidas">📏 Medidas: ${esc(a.medidas)}</div>` : "";
-  const hayAgotadas = esP && puedeEncargo && a.piezas.some(agotada);
+  const hayAgotadas = esP && puedeEncargo && !a.enCamino && a.piezas.some(agotada);
+  const consultaCamino = whatsapp ? `<a href="${esc(urlWsp("Hola, quisiera consultar cuándo estará disponible " + a.nombre + ". ¿Tienen una fecha estimada de llegada?"))}" target="_blank" rel="noopener">Consultar llegada por WhatsApp</a>` : ""; 
+  const avisoCamino = a.enCamino ? `<div class="aviso-camino"><b>📦 ${stock > 0 ? "Más unidades vienen en camino" : "Este artículo viene en camino"}</b><p>${stock > 0 ? "Hay unidades disponibles para pedir y también viene una reposición." : "Todavía no está disponible para compra. Puedes consultarnos cuándo llegará."}</p>${consultaCamino}</div>` : "";
   let cant = 1, nb = 0, nbManual = false;
   const sel = new Set();
 
@@ -990,7 +1026,7 @@ function abrir(a) {
     ${a.piezas.map((p, i) => {
       const libre = libreP(p, i);
       const ag = agotada(p);
-      const nota = enCart(i) ? "En tu carrito" : ag ? (puedeEncargo ? "Agotado · se puede encargar" : "Agotado") : "";
+      const nota = enCart(i) ? "En tu carrito" : ag ? (a.enCamino ? "En camino" : puedeEncargo ? "Agotado · se puede encargar" : "Agotado") : "";
       const em = esc(emojiDe(a));
       const img = p.imagen
         ? `<img src="${esc(p.imagen)}" alt="${esc(p.nombre)}" data-e="${em}" onerror="this.outerHTML='<span class=emo>'+this.dataset.e+'</span>'">`
@@ -1006,10 +1042,11 @@ function abrir(a) {
     <label class="todos"><input type="checkbox" id="chkTodos"> Seleccionar todos los disponibles</label>`;
 
   detalle.innerHTML = `${fotoHTML(a)}
-    <div class="meta"><span class="cat">${esc((cat.emoji ? cat.emoji + " " : "") + (a.categoria || ""))}</span><span class="estado ${e.cls}">${e.txt}</span></div>
+    <div class="meta"><span class="cat">${esc((cat.emoji ? cat.emoji + " " : "") + (a.categoria || ""))}</span><span class="estado ${e.cls}">${e.txt}</span>${a.enCamino && stock > 0 ? '<span class="estado camino">Más en camino</span>' : ""}</div>
     <h2>${esc(a.nombre)}</h2>
     <div class="precio">${precio(a.precio)}${esP ? " c/u" : ""}</div>
     <p>${esc(a.descripcion)}</p>
+    ${avisoCamino}
     ${medidas}
     ${piezasHTML}
     <div id="pedido"></div>
@@ -1017,7 +1054,9 @@ function abrir(a) {
   document.getElementById("cerrar").addEventListener("click", () => ventana.close());
 
   const ped = document.getElementById("pedido");
-  if (puedeComprar && !quedaAlgo && (stock > 0 || puedeEncargo)) {
+  if (enCaminoSinStock) {
+    ped.innerHTML = `<p class="aviso-pedido">Este artículo todavía no se puede agregar al carrito ni comprar. Consulta su llegada por WhatsApp mediante el enlace anterior.</p>`;
+  } else if (puedeComprar && !quedaAlgo && (stock > 0 || puedeEncargo)) {
     ped.innerHTML = '<p class="aviso-pedido">Ya tienes en tu carrito todo lo que se puede pedir de este artículo.</p>';
   } else if (puedeComprar && quedaAlgo) {
     const tiempo = pe.tiempo ? ` Tiempo estimado: ${esc(pe.tiempo)}.` : "";
@@ -1212,11 +1251,12 @@ async function sincronizarHoja() {
   try { aplicarHoja(await leerHoja(AJUSTES.hojaUrl), ARTICULOS, AJUSTES); return true; }
   catch (err) { console.warn("No se pudo leer la hoja de inventario:", err.message); return false; }
 }
-const refrescar = () => { pintarCuadricula(); pintarCarrito(false); };
+const refrescar = () => { pintarFiltrosEstado(); pintarCuadricula(); pintarCarrito(false); };
 const VERSION = "Hecho con cariño por Jogopines 💛";
 document.body.insertAdjacentHTML("beforeend", `<p class="version">Catálogo ${VERSION}</p>`);
 console.info("Jogopines catálogo", VERSION);
 pintarFiltros();
+pintarFiltrosEstado();
 if (AJUSTES.hojaUrl) {
   cuadricula.innerHTML = '<p class="vacio">Cargando inventario…</p>';
   let listo = false;

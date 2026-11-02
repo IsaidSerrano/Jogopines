@@ -36,15 +36,23 @@ input[type=color] { width: 56px; height: 36px; padding: 2px; }
 .herr input[type=search], .herr select { max-width: 220px; }
 #conteo { color: var(--suave); font-size: .9rem; }
 .tabla { overflow-x: auto; }
-table { width: 100%; min-width: 1250px; border-collapse: collapse; background: var(--tarjeta); border: 1px solid var(--borde); }
+table { width: 100%; min-width: 1430px; border-collapse: collapse; background: var(--tarjeta); border: 1px solid var(--borde); }
 th { text-align: left; font-size: .8rem; color: var(--suave); padding: 8px; background: #F5EBDD; }
+th:first-child, td:first-child { text-align: center; width: 38px; }
+.bulk-bar { display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:10px 12px; margin:0 0 10px; border:1px solid var(--borde); border-radius:10px; background:#fff; }
+.bulk-bar span { color:var(--suave); font-size:.9rem; font-weight:700; margin-right:auto; }
+.bulk-bar button { padding:7px 10px; font-size:.86rem; }
+.bulk-bar button:disabled { opacity:.45; cursor:not-allowed; }
+.chk-seleccion, .chk-camino { width:18px; height:18px; accent-color:var(--acento); cursor:pointer; }
+tr.fila-camino td { background:#EAF2FC; }
+.nota-camino-form { display:block; color:var(--suave); font-size:.82rem; margin:-4px 0 10px 26px; }
 td { padding: 4px; border-top: 1px solid var(--borde); vertical-align: middle; }
-td:nth-child(5) { text-align: center; }
 tr.agotado td { background: var(--agotado); }
 .num { width: 84px; } .emoji { width: 56px; text-align: center; }
-.foto { display: flex; gap: 4px; align-items: center; }
+.foto { display: flex; gap: 6px; align-items: center; min-height: 36px; }
 .foto label { cursor: pointer; padding: 5px 8px; border: 1px solid var(--borde); border-radius: 8px; background: var(--tarjeta); }
-.mini { width: 36px; height: 36px; object-fit: cover; border-radius: 6px; flex: none; }
+.mini { width: var(--mini, 96px); height: var(--mini, 96px); object-fit: cover; border-radius: 10px; flex: none; background: #F5EBDD; cursor: zoom-in; transition: transform .15s; }
+.mini:hover { transform: scale(1.05); }
 .mini.rota { outline: 2px solid var(--mal); }
 .x { padding: 6px 10px; color: var(--acento); }
 
@@ -94,6 +102,56 @@ dialog { max-height: 92vh; overflow-y: auto; }
 .pz-box > label { display: block; font-weight: 600; margin-top: 8px; }
 .pz-rapido input { width: 64px; display: inline-block; margin: 0 4px; }
 .pz-barra { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+/* --- tabla: casillas centradas y fotos grandes --- */
+#tablaArt[data-fotos="s"] { --mini: 44px; } #tablaArt[data-fotos="m"] { --mini: 72px; }
+#tablaArt[data-fotos="l"] { --mini: 96px; } #tablaArt[data-fotos="xl"] { --mini: 140px; }
+.chk-celda { display: flex; justify-content: center; align-items: center; min-height: 36px; }
+.chk-celda input, .foto input[type=checkbox] { margin: 0; flex: none; }
+td { height: 1px; }
+.foto-celda { display: flex; gap: 8px; align-items: center; }
+.foto-celda .foto-campo { display: grid; gap: 6px; min-width: 150px; }
+.foto-celda .foto-campo > div { display: flex; gap: 6px; align-items: center; }
+.foto-campo label { display: flex; align-items: center; justify-content: center; height: 36px; min-width: 36px; padding: 0 8px; }
+.tam-fotos { display: flex; gap: 6px; align-items: center; font-weight: 600; font-size: .9rem; }
+.tam-fotos select { width: auto; }
+/* --- categorías --- */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 2px 0 14px; }
+.chip { border: 2px solid var(--borde); background: var(--tarjeta); padding: 8px 16px; border-radius: 999px; font-weight: 700; }
+.chip small { opacity: .7; margin-left: 6px; font-weight: 600; }
+.chip.activo { background: var(--acento); border-color: var(--acento); color: #fff; }
+tr.grupo-fila td { padding: 0; background: #F5EBDD; border-top: 3px solid var(--acento); height: auto; }
+.grupo-btn { width: 100%; text-align: left; border: none; background: none; padding: 9px 12px; font-size: 1rem; display: flex; gap: 8px; align-items: center; border-radius: 0; }
+.grupo-btn span { color: var(--suave); font-weight: 600; font-size: .85rem; }
+/* --- GitHub y avisos --- */
+.chip-gh { border-radius: 999px; font-size: .85rem; padding: 6px 12px; color: var(--suave); }
+.chip-gh.ok { color: var(--ok); border-color: var(--ok); }
+.toast { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); max-width: min(600px, 92vw); z-index: 60; padding: 12px 18px; border-radius: 12px;
+  background: #3A3350; color: #fff; box-shadow: 0 8px 24px rgba(0,0,0,.25); font-weight: 600; cursor: pointer; }
+.toast.ok { background: var(--ok); } .toast.mal { background: var(--mal); } .toast a { color: #fff; text-decoration: underline; }
+.pasos-gh { padding-left: 20px; color: var(--suave); font-size: .92rem; margin: 8px 0 12px; display: grid; gap: 6px; }
+.pasos-gh b { color: var(--texto); }
+.gh-campos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.gh-campos label { display: block; font-weight: 600; font-size: .9rem; }
+.gh-campos input { margin-top: 4px; font-weight: 400; }
+.gh-campos .ancho { grid-column: 1 / -1; }
+#lightbox { width: auto; max-width: 94vw; background: #fff; text-align: center; padding: 12px; cursor: zoom-out; }
+#lightbox img { max-width: 90vw; max-height: 78vh; display: block; margin: 0 auto; border-radius: 10px; }
+#lightbox p { margin-top: 8px; font-weight: 700; }
+/* --- pantallas pequeñas --- */
+@media (max-width: 760px) {
+  .top { padding: 10px 10px 0; position: static; }   /* en el teléfono la cabecera no se queda fija: ocuparía media pantalla */
+  .barra { gap: 8px; }
+  .barra > button { flex: 1 1 150px; }
+  #estado { flex: 1 1 100%; order: 9; font-size: .82rem; }
+  #publicar { flex: 1 1 100%; padding: 12px 14px; font-size: 1rem; }
+  .tabs { flex-wrap: nowrap; overflow-x: auto; }
+  .tabs button { flex: none; }
+  .layout { padding: 10px; }
+  .herr input[type=search], .herr select { max-width: none; flex: 1 1 140px; }
+  .gh-campos { grid-template-columns: 1fr; }
+  .chip { padding: 7px 12px; }
+}
 </style>
 </head>
 <body>
@@ -105,8 +163,7 @@ dialog { max-height: 92vh; overflow-y: auto; }
     <button id="reconectar" hidden>↻ Reconectar carpeta</button>
     <span id="estado"></span>
     <button id="publicar" class="principal" title="Sube articulos.js y las fotos nuevas a tu sitio en GitHub">🚀 Publicar</button>
-    <button id="traer" title="Trae lo que está publicado en GitHub">⬇ Traer lo publicado</button>
-    <button id="descargar">Descargar articulos.js</button>
+    <button id="ghEstado" class="chip-gh" title="Conexión con GitHub (para publicar)">GitHub: sin conectar</button>
     <button id="vista">👁 Vista previa</button>
     <span id="mensaje"></span>
   </div>
@@ -123,16 +180,23 @@ dialog { max-height: 92vh; overflow-y: auto; }
   <div>
     <section id="t-articulos">
       <div class="aviso-hoja" id="avisoHoja" hidden>📊 Inventario enlazado a tu hoja de cálculo: en el catálogo, la <b>cantidad</b> y el <b>precio</b> de cada artículo salen de la hoja (si el nombre coincide). Los de aquí se usan solo si la hoja no está disponible.</div>
+      <div class="chips" id="chips"></div>
       <div class="herr">
         <input type="search" id="buscar" placeholder="Buscar por nombre...">
-        <select id="fcat"></select>
+        <label class="tam-fotos">Fotos <select id="tamFotos"><option value="s">Pequeñas</option><option value="m">Medianas</option><option value="l" selected>Grandes</option><option value="xl">Muy grandes</option></select></label>
         <button id="agregar" class="principal">+ Agregar artículo</button>
         <button id="detectar" title="Convierte en piezas los sets cuyas medidas traen varios nombres">📦 Detectar packs</button>
         <label class="chk-med"><input type="checkbox" id="medTop"> 📏 Mostrar medidas en el catálogo</label>
         <span id="conteo"></span>
       </div>
-      <div class="tabla"><table id="tablaArt">
-        <thead><tr><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Cantidad</th><th>Broche</th><th class="medidas">Medidas</th><th>Foto</th><th>Descripción</th><th></th></tr></thead>
+      <div class="bulk-bar">
+        <span id="seleccionConteo">0 artículos seleccionados</span>
+        <button type="button" id="marcarCamino" disabled>📦 Marcar como «Viene en camino»</button>
+        <button type="button" id="quitarCamino" disabled>✓ Quitar marca de seleccionados</button>
+        <button type="button" id="limpiarSeleccion" disabled>Limpiar selección</button>
+      </div>
+      <div class="tabla"><table id="tablaArt" data-fotos="l">
+        <thead><tr><th><input type="checkbox" id="selTodosArt" class="chk-seleccion" title="Seleccionar todos los artículos visibles"></th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Cantidad</th><th>Viene en camino</th><th>Broche</th><th class="medidas">Medidas</th><th>Foto</th><th>Descripción</th><th></th></tr></thead>
         <tbody id="filas"></tbody>
       </table></div>
     </section>
@@ -160,6 +224,8 @@ dialog { max-height: 92vh; overflow-y: auto; }
       </ol>
       <h3>Agregar o quitar un artículo</h3>
       <p>Pestaña <b>Artículos</b> → <b>+ Agregar artículo</b>: se abre un formulario con todo lo necesario (foto, nombre, categoría, precio, cantidad, descripción, medidas y broche). Presiona <b>Guardar artículo</b>, o <b>Guardar y agregar otro</b> para cargar varios seguidos. Para corregir uno usa el <b>✏️</b> de su fila (mismo formulario); para cambios rápidos como precio o cantidad, escribe directo en la tabla. Para quitarlo, la <b>✕</b>.</p>
+      <h3>Artículos que vienen en camino</h3>
+      <p>Activa la casilla <b>Viene en camino</b> en la fila o desde el formulario del artículo. Si todavía hay unidades en inventario, seguirán apareciendo como <b>Disponibles</b> y también mostrarán que viene una reposición. Si no queda ninguna unidad, aparecerán como <b>En camino</b>: el cliente podrá consultar por WhatsApp, pero no agregarlos al carrito ni comprarlos hasta que los recibas. Cuando llegue el pedido, desmarca la casilla. Para varios artículos a la vez, selecciónalos en la primera columna y usa los botones de marcado masivo.</p>
       <h3>Precios con decimales</h3>
       <p>Escribe <code>0.50</code>, <code>1.25</code>, <code>3</code>... (usa el punto, o la coma si tu teclado la pone). En el catálogo siempre se ven con dos decimales: $0.50, $3.00.</p>
       <h3>Disponibilidad y cantidad</h3>
@@ -192,9 +258,11 @@ dialog { max-height: 92vh; overflow-y: auto; }
       <h3>Pago con Yappy</h3>
       <p>En <b>Negocio y contacto → Pago con Yappy</b> activas el botón, escribes tu número y eliges la imagen de tu QR (guárdala antes en la carpeta <code>Fotos</code>). El cliente ve el QR, tu número y el total; paga en su app y te envía el comprobante por WhatsApp. Tú confirmas el pago a mano.</p>
       <h3>Publicar con un clic (GitHub)</h3>
-      <p>En <b>Negocio y contacto → Publicar en GitHub</b> escribes tu usuario, el repositorio y pegas tu token (se guarda solo en este navegador). Presiona <b>🔎 Probar conexión</b>. Desde ahí, el botón <b>🚀 Publicar</b> (arriba) sube tu <code>articulos.js</code> y las fotos nuevas en un solo paso, y el sitio se actualiza en 1 o 2 minutos. <b>⬇ Traer lo publicado</b> carga lo que hay en GitHub, útil si editas desde otra computadora.</p>
+      <p>Presiona <b>🚀 Publicar</b>: sube tu <code>articulos.js</code> y las fotos nuevas a tu repositorio y el sitio se actualiza en 1 o 2 minutos, sin abrir GitHub. La primera vez te guía para conectarlo (usuario, repositorio y un token); también puedes abrir esa ventana con el botón <b>GitHub: sin conectar</b>. Si en GitHub hay una versión distinta a la que tienes abierta (por ejemplo, si cambiaste algo desde otro lado), te avisa antes de reemplazarla y te deja ver lo que hay publicado.</p>
       <h3>Subir los cambios a internet</h3>
-      <p>El editor guarda en tu computadora. Para que se vean en tu sitio publicado, vuelve a arrastrar la carpeta completa a tu proyecto (ej. Netlify). Si no puedes conectar la carpeta, usa <b>Descargar articulos.js</b> y reemplaza ese archivo en tu carpeta.</p>
+      <p>Usa <b>🚀 Publicar</b> (arriba). Si prefieres GitHub Desktop, después de publicar desde el editor haz <b>Fetch origin</b> y <b>Pull</b> para que tu copia local quede al día.</p>
+      <h3>Filtros de disponibilidad del catálogo</h3>
+      <p>El catálogo público incluye filtros para <b>Disponibles</b>, <b>En camino</b>, <b>Agotados</b> y <b>Todos</b>. Un artículo con stock actual y reposición pendiente puede aparecer tanto en Disponibles como en En camino.</p>
       <h3>Reglas para que las Fotos se vean en internet</h3>
       <ul>
         <li>La carpeta se llama exactamente <code>Fotos</code> y está junto a <code>index.html</code>.</li>
@@ -227,6 +295,8 @@ dialog { max-height: 92vh; overflow-y: auto; }
         <label class="check"><input type="checkbox" id="fVerMedidas"> Mostrar las medidas de este pin</label>
         <label class="check"><input type="checkbox" id="fBroche"> Ofrece broche de seguridad</label>
         <label class="check"><input type="checkbox" id="fEncargo"> Permitir pedido especial si se agota</label>
+        <label class="check"><input type="checkbox" id="fEnCamino"> Viene en camino</label>
+        <small class="nota-camino-form">Si todavía quedan unidades, seguirán apareciendo como disponibles. Cuando recibas la reposición, desmarca esta casilla.</small>
       </div>
     </div>
     <details class="pz-box" id="fPiezasBox">
@@ -252,6 +322,47 @@ dialog { max-height: 92vh; overflow-y: auto; }
   </div>
 </dialog>
 
+<dialog id="lightbox"><img id="lbImg" alt=""><p id="lbTit"></p></dialog>
+
+<dialog id="dlgGH">
+  <div class="form-art">
+    <h2>Conectar con GitHub</h2>
+    <p style="color:var(--suave)">Con esta conexión, el botón <b>🚀 Publicar</b> sube tus cambios y fotos a tu sitio sin abrir GitHub. Solo se hace una vez.</p>
+    <ol class="pasos-gh">
+      <li>Escribe tu <b>usuario</b> de GitHub y el <b>nombre del repositorio</b> de tu catálogo.</li>
+      <li>Crea tu <b>token</b> (una llave que solo permite escribir en ese repositorio): <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">abre esta página de GitHub</a>. Ponle un nombre (ej. «Editor Jogopines») y un vencimiento. En <b>Repository access</b> elige <b>Only select repositories</b> y marca tu catálogo. En <b>Repository permissions</b> pon <b>Contents</b> en <b>Read and write</b>. Presiona <b>Generate token</b> y copia el texto.</li>
+      <li>Pégalo abajo y presiona <b>Probar y guardar</b>. El token queda guardado solo en este navegador.</li>
+    </ol>
+    <div class="gh-campos">
+      <label>Usuario de GitHub<input id="ghUsuario" autocomplete="off"></label>
+      <label>Repositorio<input id="ghRepo" autocomplete="off" placeholder="ej. Jogopines"></label>
+      <label class="ancho">Token<input id="ghToken" type="password" autocomplete="off"></label>
+      <label>Rama<input id="ghRama" autocomplete="off"></label>
+      <label>Carpeta del sitio (vacía si index.html está en la raíz)<input id="ghCarpeta" autocomplete="off"></label>
+    </div>
+    <div class="res" id="ghRes"></div>
+    <div class="form-botones">
+      <button id="ghOlvidar" type="button">Olvidar el token</button>
+      <button id="ghCerrar" type="button">Cerrar</button>
+      <button id="ghProbarGuardar" type="button" class="principal">Probar y guardar</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="dlgConflicto">
+  <div class="form-art">
+    <h2>Hay una versión distinta en GitHub</h2>
+    <p id="cfTexto"></p>
+    <div class="form-botones">
+      <button id="cfCancelar" type="button">Cancelar</button>
+      <button id="cfTraer" type="button">Ver lo que hay en GitHub</button>
+      <button id="cfReemplazar" type="button" class="principal">Publicar lo mío (reemplaza)</button>
+    </div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" hidden></div>
+
 <script src="articulos.js"></script>
 <script>
 const $ = id => document.getElementById(id);
@@ -275,7 +386,7 @@ function normalizar(d) {
   aj.github = { ...AJUSTES_BASE.github, ...((d.ajustes || {}).github || {}) };
   const categorias = (d.categorias || []).map(c => typeof c === "string" ? { nombre: c, emoji: "" } : { nombre: c.nombre, emoji: c.emoji || "" });
   const articulos = (d.articulos || []).map(a => ({
-    nombre: "", categoria: categorias[0] ? categorias[0].nombre : "", precio: 0, cantidad: 1, broche: false, encargo: true, piezas: [], precioPack: "", medidas: "", verMedidas: true, imagen: "", descripcion: "", ...a
+    nombre: "", categoria: categorias[0] ? categorias[0].nombre : "", precio: 0, cantidad: 1, broche: false, encargo: true, enCamino: false, piezas: [], precioPack: "", medidas: "", verMedidas: true, imagen: "", descripcion: "", ...a
   }));
   return { ajustes: aj, categorias, articulos };
 }
@@ -292,7 +403,7 @@ let carpeta = null, conectado = false, sucio = false, ultimo = "", temporizador,
 function articuloLimpio(a) {
   const o = {
     nombre: a.nombre, categoria: a.categoria, precio: a.precio, cantidad: a.cantidad, broche: !!a.broche,
-    medidas: a.medidas || "", verMedidas: a.verMedidas !== false, encargo: a.encargo !== false,
+    medidas: a.medidas || "", verMedidas: a.verMedidas !== false, encargo: a.encargo !== false, enCamino: !!a.enCamino,
     imagen: (a.imagen || "").trim(), descripcion: a.descripcion
   };
   if (Array.isArray(a.piezas) && a.piezas.length) {
@@ -321,7 +432,7 @@ function pintarEstado() {
   $("reconectar").hidden = !(carpeta && !conectado);
   if (conectado) { e.className = "ok"; e.textContent = `● Carpeta «${carpeta.name}» conectada. Guardado automático${ultimo ? " · " + ultimo : ""}`; }
   else if (carpeta) { e.className = ""; e.textContent = "Falta el permiso para esa carpeta. Presiona Reconectar."; }
-  else if (!soporta) { e.className = ""; e.textContent = "Este navegador no guarda directo (usa Chrome o Edge en computadora). Usa «Descargar articulos.js»."; }
+  else if (!soporta) { e.className = ""; e.textContent = "Este navegador no guarda directo (usa Chrome o Edge en computadora). Usa 🚀 Publicar para subir tus cambios."; }
   else { e.className = ""; e.textContent = "Sin carpeta conectada: los cambios no se guardan solos."; }
 }
 async function guardarEnCarpeta() {
@@ -335,16 +446,10 @@ async function guardarEnCarpeta() {
 function cambio() {
   sucio = true;
   if (conectado) { clearTimeout(temporizador); temporizador = setTimeout(guardarEnCarpeta, 600); }
+  pintarGH();
 }
 window.addEventListener("beforeunload", e => { if (sucio) { e.preventDefault(); e.returnValue = ""; } });
 
-$("descargar").addEventListener("click", () => {
-  const url = URL.createObjectURL(new Blob([generar()], { type: "text/javascript;charset=utf-8" }));
-  const a = document.createElement("a"); a.href = url; a.download = "articulos.js"; a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1500);
-  sucio = false;
-  mensaje("Descargado. Reemplaza el articulos.js de tu carpeta con este archivo.");
-});
 
 /* Recordar la carpeta elegida (IndexedDB) */
 const BD = {
@@ -365,7 +470,7 @@ async function alConectar() {
     try {
       const texto = await (await (await carpeta.getFileHandle("articulos.js")).getFile()).text();
       const d = new Function(texto + "\nreturn { ajustes: typeof AJUSTES !== 'undefined' ? AJUSTES : {}, categorias: CATEGORIAS, articulos: ARTICULOS };")();
-      datos = normalizar(d);
+      datos = normalizar(d); snapshot = instantanea();
     } catch (e) { /* se queda con lo que ya estaba cargado */ }
     renderTodo();
   }
@@ -471,17 +576,20 @@ function tdMedidas(a) {
   const td = celda(cont); td.className = "medidas"; return td;
 }
 function celda(...hijos) { const td = document.createElement("td"); td.append(...hijos); return td; }
-function miniatura(ruta) {
+function miniatura(ruta, titulo) {
   const i = document.createElement("img"); i.className = "mini"; i.alt = "";
   i.onerror = () => { i.classList.add("rota"); i.title = "No se encuentra esta foto: elígela de nuevo con 📁"; };
-  i.poner = r => { i.classList.remove("rota"); i.title = ""; i.hidden = !r; if (r) i.src = r; else i.removeAttribute("src"); };
+  i.poner = r => { i.classList.remove("rota"); i.title = r ? "Clic para ver la foto grande" : ""; i.hidden = !r; if (r) i.src = r; else i.removeAttribute("src"); };
+  i.addEventListener("click", () => { if (!i.classList.contains("rota") && i.getAttribute("src")) abrirLightbox(i.src, titulo ? titulo() : ""); });
   i.poner((ruta || "").trim());
   return i;
 }
+function abrirLightbox(src, titulo) { $("lbImg").src = src; $("lbTit").textContent = titulo || ""; $("lightbox").showModal(); }
+$("lightbox").addEventListener("click", () => $("lightbox").close());
 function campoFoto(obj, clave, local) {
   const txt = campo(obj, clave, { local, alCambiar: v => mini.poner(v.trim()) });
   txt.placeholder = "Fotos/nombre.jpg";
-  const mini = miniatura(obj[clave]);
+  const mini = miniatura(obj[clave], () => obj.nombre || obj.titulo || "");
   const lbl = document.createElement("label"); lbl.textContent = "📁"; lbl.title = "Elegir foto de tu computadora";
   const arch = document.createElement("input"); arch.type = "file"; arch.accept = "image/*"; arch.hidden = true;
   arch.addEventListener("change", async () => {
@@ -489,7 +597,9 @@ function campoFoto(obj, clave, local) {
     arch.value = "";
   });
   lbl.appendChild(arch);
-  const cont = document.createElement("div"); cont.className = "foto"; cont.append(mini, txt, lbl);
+  const campoDiv = document.createElement("div"); campoDiv.className = "foto-campo";
+  const fila2 = document.createElement("div"); fila2.append(txt, lbl); campoDiv.append(fila2);
+  const cont = document.createElement("div"); cont.className = "foto-celda"; cont.append(mini, campoDiv);
   return cont;
 }
 const emojiCat = n => (datos.categorias.find(c => c.nombre === n) || {}).emoji || "";
@@ -529,59 +639,164 @@ function cantidadCampo(a, marcar) {
   }
   return i;
 }
+function escH(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+let catFiltro = "";                 // "" = todas las categorías
+const cerrados = new Set();         // categorías con el grupo plegado
+const seleccionados = new Set();
+let visiblesActuales = [];
+
+function actualizarBarraSeleccion() {
+  const vigentes = [...seleccionados].filter(a => datos.articulos.includes(a));
+  seleccionados.clear();
+  vigentes.forEach(a => seleccionados.add(a));
+  const n = vigentes.length;
+  $("seleccionConteo").textContent = `${n} artículo${n === 1 ? "" : "s"} seleccionado${n === 1 ? "" : "s"}`;
+  $("limpiarSeleccion").disabled = n === 0;
+  $("marcarCamino").disabled = !vigentes.some(a => !a.enCamino);
+  $("quitarCamino").disabled = !vigentes.some(a => !!a.enCamino);
+  const cab = $("selTodosArt");
+  const marcados = visiblesActuales.filter(a => seleccionados.has(a)).length;
+  cab.checked = visiblesActuales.length > 0 && marcados === visiblesActuales.length;
+  cab.indeterminate = marcados > 0 && marcados < visiblesActuales.length;
+  cab.disabled = visiblesActuales.length === 0;
+}
+
+function aplicarMarcaCamino(valor) {
+  const afectados = [...seleccionados].filter(a => datos.articulos.includes(a) && !!a.enCamino !== valor);
+  if (!afectados.length) return;
+  afectados.forEach(a => { a.enCamino = valor; });
+  cambio();
+  renderArticulos();
+  mensaje(valor
+    ? `${afectados.length} artículo${afectados.length === 1 ? "" : "s"} marcado${afectados.length === 1 ? "" : "s"} como «Viene en camino».`
+    : `Se quitó la marca de «Viene en camino» en ${afectados.length} artículo${afectados.length === 1 ? "" : "s"}.`);
+}
+
+$("selTodosArt").addEventListener("change", () => {
+  visiblesActuales.forEach(a => {
+    if ($("selTodosArt").checked) seleccionados.add(a);
+    else seleccionados.delete(a);
+  });
+  actualizarBarraSeleccion();
+});
+$("marcarCamino").addEventListener("click", () => aplicarMarcaCamino(true));
+$("quitarCamino").addEventListener("click", () => aplicarMarcaCamino(false));
+$("limpiarSeleccion").addEventListener("click", () => {
+  seleccionados.clear();
+  actualizarBarraSeleccion();
+});
+
+function pintarChips() {
+  const cont = $("chips"); cont.innerHTML = "";
+  const cuenta = {}; datos.articulos.forEach(a => { cuenta[a.categoria] = (cuenta[a.categoria] || 0) + 1; });
+  const crear = (clave, texto, n) => {
+    const b = document.createElement("button"); b.type = "button";
+    b.className = "chip" + (catFiltro === clave ? " activo" : "");
+    b.innerHTML = `${escH(texto)}<small>${n}</small>`;
+    b.addEventListener("click", () => { catFiltro = clave; seleccionados.clear(); renderArticulos(); });
+    cont.appendChild(b);
+  };
+  crear("", "Todas", datos.articulos.length);
+  datos.categorias.forEach(c => crear(c.nombre, (c.emoji ? c.emoji + " " : "") + c.nombre, cuenta[c.nombre] || 0));
+  Object.keys(cuenta).filter(k => !datos.categorias.some(c => c.nombre === k)).forEach(k => crear(k, k + " (fuera de la lista)", cuenta[k]));
+}
+
+function crearFila(a) {
+  const tr = document.createElement("tr");
+  const stockFila = () => Array.isArray(a.piezas) && a.piezas.length
+    ? a.piezas.reduce((s, p) => s + Math.max(0, Number(p.cantidad ?? 1) || 0), 0)
+    : Math.max(0, Number(a.cantidad) || 0);
+  const marcar = () => {
+    const stock = stockFila();
+    tr.classList.toggle("agotado", stock <= 0 && !a.enCamino);
+    tr.classList.toggle("fila-camino", stock <= 0 && !!a.enCamino);
+  };
+
+  const chkSel = document.createElement("input");
+  chkSel.type = "checkbox"; chkSel.className = "chk-seleccion";
+  chkSel.checked = seleccionados.has(a); chkSel.title = "Seleccionar este artículo";
+  chkSel.addEventListener("change", () => {
+    if (chkSel.checked) seleccionados.add(a); else seleccionados.delete(a);
+    actualizarBarraSeleccion();
+  });
+
+  const sel = document.createElement("select");
+  const nombres = datos.categorias.map(c => c.nombre);
+  (nombres.includes(a.categoria) ? nombres : [...nombres, a.categoria]).forEach(c => {
+    const o = document.createElement("option"); o.value = c;
+    o.textContent = nombres.includes(c) ? c : c + " (no está en la lista)";
+    o.selected = c === a.categoria; sel.appendChild(o);
+  });
+  sel.addEventListener("change", () => { a.categoria = sel.value; cambio(); renderArticulos(); });
+
+  const camino = document.createElement("input");
+  camino.type = "checkbox"; camino.className = "chk-camino"; camino.checked = !!a.enCamino;
+  camino.title = "Marcar si este artículo viene en camino";
+  camino.addEventListener("change", () => { a.enCamino = camino.checked; marcar(); cambio(); actualizarBarraSeleccion(); });
+
+  const chk = document.createElement("input"); chk.type = "checkbox"; chk.checked = !!a.broche; chk.title = "Ofrece broche de seguridad";
+  chk.addEventListener("change", () => { a.broche = chk.checked; cambio(); });
+  const cc = document.createElement("div"); cc.className = "chk-celda"; cc.appendChild(chk);
+
+  const x = document.createElement("button"); x.className = "x"; x.textContent = "✕"; x.title = "Quitar artículo";
+  x.addEventListener("click", () => {
+    if (confirm(`¿Quitar "${a.nombre || "artículo sin nombre"}"?`)) {
+      datos.articulos = datos.articulos.filter(o => o !== a);
+      seleccionados.delete(a);
+      cambio(); renderArticulos();
+    }
+  });
+
+  const ed = document.createElement("button"); ed.className = "x"; ed.textContent = (Array.isArray(a.piezas) && a.piezas.length) ? "✏️ 📦" + a.piezas.length : "✏️"; ed.title = "Editar con el formulario completo";
+  ed.addEventListener("click", () => abrirFormulario(a));
+
+  tr.append(
+    celda(chkSel), celda(campo(a, "nombre")), celda(sel),
+    celda(campo(a, "precio", { tipo: "number", paso: "0.01", clase: "num" })),
+    celda(cantidadCampo(a, marcar)), celda(camino),
+    celda(cc), tdMedidas(a), celda(campoFoto(a, "imagen")), celda(campo(a, "descripcion")), celda(ed, x)
+  );
+  marcar();
+  return tr;
+}
+
 function renderArticulos() {
   $("avisoHoja").hidden = !datos.ajustes.hojaUrl;
   $("medTop").checked = !!datos.ajustes.mostrarMedidas;
   $("tablaArt").classList.toggle("sin-medidas", !datos.ajustes.mostrarMedidas);
   const q = $("buscar").value.trim().toLowerCase();
-  const fc = $("fcat").value;
-  const sel0 = $("fcat"); const previo = sel0.value;
-  sel0.innerHTML = '<option value="">Todas las categorías</option>' + datos.categorias.map(c => `<option>${c.nombre.replace(/</g, "&lt;")}</option>`).join("");
-  sel0.value = datos.categorias.some(c => c.nombre === previo) ? previo : "";
+  pintarChips();
 
   const filas = $("filas"); filas.innerHTML = "";
+  visiblesActuales = [];
+  const grupos = new Map();
+  datos.articulos.forEach(a => { if (!grupos.has(a.categoria)) grupos.set(a.categoria, []); grupos.get(a.categoria).push(a); });
+  const orden = datos.categorias.map(c => c.nombre);
+  const claves = [...orden.filter(c => grupos.has(c)), ...[...grupos.keys()].filter(c => !orden.includes(c))];
   let n = 0;
-  datos.articulos.forEach(a => {
-    if (q && !(a.nombre || "").toLowerCase().includes(q)) return;
-    if (sel0.value && a.categoria !== sel0.value) return;
-    n++;
-    const tr = document.createElement("tr");
-    const marcar = () => tr.classList.toggle("agotado", !(a.cantidad > 0));
-
-
-    const sel = document.createElement("select");
-    const nombres = datos.categorias.map(c => c.nombre);
-    (nombres.includes(a.categoria) ? nombres : [...nombres, a.categoria]).forEach(c => {
-      const o = document.createElement("option"); o.value = c;
-      o.textContent = nombres.includes(c) ? c : c + " (no está en la lista)";
-      o.selected = c === a.categoria; sel.appendChild(o);
-    });
-    sel.addEventListener("change", () => { a.categoria = sel.value; cambio(); });
-
-    const chk = document.createElement("input"); chk.type = "checkbox"; chk.checked = !!a.broche; chk.title = "Ofrece broche de seguridad";
-    chk.addEventListener("change", () => { a.broche = chk.checked; cambio(); });
-
-    const x = document.createElement("button"); x.className = "x"; x.textContent = "✕"; x.title = "Quitar artículo";
-    x.addEventListener("click", () => {
-      if (confirm(`¿Quitar "${a.nombre || "artículo sin nombre"}"?`)) { datos.articulos = datos.articulos.filter(o => o !== a); cambio(); renderArticulos(); }
-    });
-
-    const ed = document.createElement("button"); ed.className = "x"; ed.textContent = (Array.isArray(a.piezas) && a.piezas.length) ? "✏️ 📦" + a.piezas.length : "✏️"; ed.title = "Editar con el formulario completo";
-    ed.addEventListener("click", () => abrirFormulario(a));
-
-    tr.append(
-      celda(campo(a, "nombre")), celda(sel),
-      celda(campo(a, "precio", { tipo: "number", paso: "0.01", clase: "num" })),
-      celda(cantidadCampo(a, marcar)),
-      celda(chk), tdMedidas(a), celda(campoFoto(a, "imagen")), celda(campo(a, "descripcion")), celda(ed, x)
-    );
-    marcar();
-    filas.appendChild(tr);
+  claves.forEach(cat => {
+    if (catFiltro && cat !== catFiltro) return;
+    const lista = grupos.get(cat).filter(a => !q || (a.nombre || "").toLowerCase().includes(q));
+    if (!lista.length) return;
+    n += lista.length;
+    const cerrado = cerrados.has(cat) && !q;          // al buscar, se abren todos los grupos
+    const info = datos.categorias.find(c => c.nombre === cat);
+    const cab = document.createElement("tr"); cab.className = "grupo-fila";
+    cab.innerHTML = `<td colspan="11"><button type="button" class="grupo-btn">${cerrado ? "▸" : "▾"} ${info && info.emoji ? escH(info.emoji) : ""} <b>${escH(cat)}</b> <span>${lista.length} artículo${lista.length === 1 ? "" : "s"}</span></button></td>`;
+    cab.querySelector("button").addEventListener("click", () => { if (cerrados.has(cat)) cerrados.delete(cat); else cerrados.add(cat); renderArticulos(); });
+    filas.appendChild(cab);
+    if (!cerrado) lista.forEach(a => { visiblesActuales.push(a); filas.appendChild(crearFila(a)); });
   });
   $("conteo").textContent = `${n} de ${datos.articulos.length} artículos`;
+  actualizarBarraSeleccion();
 }
-$("buscar").addEventListener("input", renderArticulos);
-$("fcat").addEventListener("change", renderArticulos);
+$("buscar").addEventListener("input", () => { seleccionados.clear(); renderArticulos(); });
+const tamGuardado = (() => { try { return localStorage.getItem("jogopines_tam_fotos"); } catch (er) { return null; } })();
+if (tamGuardado && ["s", "m", "l", "xl"].includes(tamGuardado)) { $("tamFotos").value = tamGuardado; $("tablaArt").dataset.fotos = tamGuardado; }
+$("tamFotos").addEventListener("change", () => {
+  $("tablaArt").dataset.fotos = $("tamFotos").value;
+  try { localStorage.setItem("jogopines_tam_fotos", $("tamFotos").value); } catch (er) {}
+});
 $("agregar").addEventListener("click", () => abrirFormulario(null));
 
 /* ---------- Formulario para agregar / editar un artículo ---------- */
@@ -608,6 +823,7 @@ function abrirFormulario(item) {
   $("fVerMedidas").checked = item ? item.verMedidas !== false : true;
   $("fBroche").checked = item ? !!item.broche : true;
   $("fEncargo").checked = item ? item.encargo !== false : true;
+  $("fEnCamino").checked = item ? !!item.enCamino : false;
   fPz = item && Array.isArray(item.piezas) ? item.piezas.map(p => ({ ...p })) : [];
   $("fPrecioPack").value = item && item.precioPack ? item.precioPack : "";
   $("fPegar").value = "";
@@ -703,7 +919,8 @@ async function guardarFormulario(otro) {
       precio: Math.max(0, Number($("fPrecio").value || 0)),
       cantidad: Math.max(0, Math.floor(Number($("fCantidad").value || 0))),
       descripcion: $("fDesc").value.trim(), medidas: $("fMedidas").value.trim(),
-      verMedidas: $("fVerMedidas").checked, broche: $("fBroche").checked, encargo: $("fEncargo").checked
+      verMedidas: $("fVerMedidas").checked, broche: $("fBroche").checked, encargo: $("fEncargo").checked,
+      enCamino: $("fEnCamino").checked
     });
     const pz = fPz.map((p, k) => {
       const q = { nombre: nombresPz[k], medidas: (p.medidas || "").trim(), imagen: (p.imagen || "").trim(), cantidad: Math.max(0, Math.floor(Number(p.cantidad ?? 1) || 0)) };
@@ -716,7 +933,7 @@ async function guardarFormulario(otro) {
     if (fArchivo) await elegirFoto(fArchivo, ruta => { a.imagen = ruta; });
     if (!editando) datos.articulos.unshift(a);
     ultimaCat = a.categoria;
-    $("buscar").value = ""; $("fcat").value = "";
+    $("buscar").value = ""; catFiltro = ""; cerrados.delete(a.categoria);
     cambio(); renderArticulos();
     if (otro && !editando) { mensaje("Agregado: " + nombre); abrirFormulario(null); }
     else $("formArt").close();
@@ -978,14 +1195,17 @@ async function probarHoja(url, salida) {
 const GH_TOKEN = "jogopines_gh_token";
 function ghToken() { try { return localStorage.getItem(GH_TOKEN) || ""; } catch (e) { return ""; } }
 function ghGuardarToken(t) { try { if (t) localStorage.setItem(GH_TOKEN, t); else localStorage.removeItem(GH_TOKEN); } catch (e) {} }
+const GH_CFG = "jogopines_gh_cfg";
+function ghCfgLocal() { try { return JSON.parse(localStorage.getItem(GH_CFG) || "{}"); } catch (er) { return {}; } }
+function ghGuardarCfg(c) { try { localStorage.setItem(GH_CFG, JSON.stringify(c)); } catch (er) {} }
 function ghConfig() {
-  const g = datos.ajustes.github || {};
-  return { usuario: (g.usuario || "").trim(), repo: (g.repo || "").trim(), rama: (g.rama || "main").trim() || "main", carpeta: (g.carpeta || "").trim().replace(/^\/+|\/+$/g, "") };
+  const g = datos.ajustes.github || {}, l = ghCfgLocal();
+  const t = k => String(g[k] || l[k] || "").trim();
+  return { usuario: t("usuario"), repo: t("repo"), rama: t("rama") || "main", carpeta: t("carpeta").replace(/^\/+|\/+$/g, "") };
 }
 function ghListo() { const c = ghConfig(); return !!(c.usuario && c.repo && ghToken()); }
 const ghRama = c => c.rama.split("/").map(encodeURIComponent).join("/");
 const ghPrefijo = c => c.carpeta ? c.carpeta + "/" : "";
-const claveSha = c => "jogopines_gh_sha_" + c.usuario + "/" + c.repo + "/" + c.rama;
 function b64Texto(t) { let bin = ""; new TextEncoder().encode(t).forEach(b => { bin += String.fromCharCode(b); }); return btoa(bin); }
 const b64Archivo = f => new Promise((ok, mal) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1]); r.onerror = () => mal(r.error); r.readAsDataURL(f); });
 async function gh(ruta, op = {}) {
@@ -1003,61 +1223,44 @@ async function gh(ruta, op = {}) {
 }
 function irAConfigGitHub() { document.querySelector('#tabs button[data-t="ajustes"]').click(); }
 
-async function publicarGitHub() {
-  if (!ghListo()) { mensaje("Primero configura GitHub (usuario, repositorio y token) en «Negocio y contacto».", true); irAConfigGitHub(); return; }
-  const c = ghConfig(), base = `/repos/${c.usuario}/${c.repo}`, pref = ghPrefijo(c), btn = $("publicar");
-  btn.disabled = true;
-  try {
-    mensaje("Publicando… (1/5) revisando GitHub");
-    const ref = await gh(`${base}/git/ref/heads/${ghRama(c)}`);
-    const padre = ref.object.sha;
-    const commitPadre = await gh(`${base}/git/commits/${padre}`);
-    let shaGuardada = null; try { shaGuardada = localStorage.getItem(claveSha(c)); } catch (e) {}
-    if (shaGuardada) {      // ¿cambió articulos.js en GitHub desde la última vez que publicaste aquí?
-      let remota = null;
-      try { remota = (await gh(`${base}/contents/${pref}articulos.js?ref=${ghRama(c)}`)).sha; } catch (e) {}
-      if (remota && remota !== shaGuardada && !confirm("En GitHub hay una versión de articulos.js distinta a la última que publicaste desde este editor (¿la cambiaste en otro lado?).\n\nAceptar = reemplazarla con la de este editor.\nCancelar = no publicar (usa «Traer lo publicado» para ver lo que hay).")) {
-        mensaje("Publicación cancelada."); return;
-      }
-    }
-    const archivos = [{ ruta: pref + "articulos.js", base64: b64Texto(generar()) }];
-    for (const [ruta, f] of fotosPendientes) archivos.push({ ruta: pref + ruta, base64: await b64Archivo(f) });
-    mensaje(`Publicando… (2/5) subiendo ${archivos.length} archivo(s)`);
-    const entradas = [];
-    for (const a of archivos) {
-      const blob = await gh(`${base}/git/blobs`, { method: "POST", body: JSON.stringify({ content: a.base64, encoding: "base64" }) });
-      entradas.push({ path: a.ruta, mode: "100644", type: "blob", sha: blob.sha });
-    }
-    mensaje("Publicando… (3/5) armando el cambio");
-    const arbol = await gh(`${base}/git/trees`, { method: "POST", body: JSON.stringify({ base_tree: commitPadre.tree.sha, tree: entradas }) });
-    const nuevo = await gh(`${base}/git/commits`, { method: "POST", body: JSON.stringify({ message: "Actualización desde el editor · " + new Date().toLocaleString(), tree: arbol.sha, parents: [padre] }) });
-    mensaje("Publicando… (4/5) enviando");
-    await gh(`${base}/git/refs/heads/${ghRama(c)}`, { method: "PATCH", body: JSON.stringify({ sha: nuevo.sha }) });
-    try { localStorage.setItem(claveSha(c), entradas[0].sha); } catch (e) {}
-    const nFotos = archivos.length - 1;
-    fotosPendientes.clear(); sucio = false; pintarEstado();
-    mensaje(`✔ Publicado: articulos.js${nFotos ? " y " + nFotos + " foto(s)" : ""}. En 1 o 2 minutos se verá en tu sitio (recarga con Ctrl+F5).`);
-  } catch (e) { mensaje("No se pudo publicar: " + e.message, true); }
-  finally { btn.disabled = false; }
+let snapshot = "";     // cómo estaban los datos al abrir (o al publicar por última vez): sirve para detectar cambios hechos en otro lado
+function instantanea(d) {
+  d = d || datos;
+  const { github, ...aj } = d.ajustes;
+  return JSON.stringify({ a: d.articulos.map(articuloLimpio), c: d.categorias, aj });
+}
+const urlSitio = c => c.repo.toLowerCase() === (c.usuario + ".github.io").toLowerCase() ? `https://${c.usuario}.github.io/` : `https://${c.usuario}.github.io/${c.repo}/`;
+const decodificarB64 = b64 => new TextDecoder().decode(Uint8Array.from(atob(String(b64).replace(/\s/g, "")), ch => ch.charCodeAt(0)));
+function datosDeTexto(texto) {
+  const d = new Function(texto + "\nreturn { ajustes: typeof AJUSTES !== 'undefined' ? AJUSTES : {}, categorias: CATEGORIAS, articulos: ARTICULOS };")();
+  return normalizar(d);
 }
 
-async function traerPublicado() {
-  if (!ghListo()) { mensaje("Primero configura GitHub (usuario, repositorio y token) en «Negocio y contacto».", true); irAConfigGitHub(); return; }
-  if (sucio && !confirm("Tienes cambios sin publicar. Si traes lo publicado, se perderán.\n\n¿Continuar?")) return;
-  const c = ghConfig(), pref = ghPrefijo(c), cfg = datos.ajustes.github;
-  try {
-    mensaje("Trayendo lo publicado…");
-    const f = await gh(`/repos/${c.usuario}/${c.repo}/contents/${pref}articulos.js?ref=${ghRama(c)}`);
-    const texto = new TextDecoder().decode(Uint8Array.from(atob(String(f.content).replace(/\s/g, "")), ch => ch.charCodeAt(0)));
-    const d = new Function(texto + "\nreturn { ajustes: typeof AJUSTES !== 'undefined' ? AJUSTES : {}, categorias: CATEGORIAS, articulos: ARTICULOS };")();
-    datos = normalizar(d);
-    if (!datos.ajustes.github.usuario) datos.ajustes.github = cfg;      // conserva tu conexión a GitHub
-    fotosPendientes.clear(); sucio = false; renderTodo(); pintarEstado();
-    try { localStorage.setItem(claveSha(c), f.sha); } catch (e) {}
-    mensaje("✔ Listo: ahora ves lo que está publicado.");
-  } catch (e) { mensaje("No se pudo traer lo publicado: " + e.message, true); }
+let tmToast;
+function toast(texto, tipo, ms, html) {
+  const t = $("toast");
+  if (html) t.innerHTML = texto; else t.textContent = texto;
+  t.className = "toast " + (tipo || ""); t.hidden = false;
+  clearTimeout(tmToast);
+  if (ms !== 0) tmToast = setTimeout(() => { t.hidden = true; }, ms || 9000);
 }
+$("toast").addEventListener("click", ev => { if (ev.target.tagName !== "A") $("toast").hidden = true; });
 
+function pintarGH() {
+  const b = $("ghEstado"); if (!b) return;
+  const ok = ghListo();
+  b.textContent = ok ? "GitHub: conectado ✔" : "GitHub: sin conectar";
+  b.classList.toggle("ok", ok);
+}
+function abrirGH() {
+  const g = datos.ajustes.github, c = ghConfig();
+  let u = c.usuario, r = c.repo;
+  if (!u && /\.github\.io$/.test(location.hostname)) { u = location.hostname.split(".")[0]; r = r || (location.pathname.split("/")[1] || ""); }
+  $("ghUsuario").value = u || ""; $("ghRepo").value = r || ""; $("ghRama").value = c.rama || "main"; $("ghCarpeta").value = c.carpeta || "";
+  $("ghToken").value = ""; $("ghToken").placeholder = ghToken() ? "•••••••• (ya hay un token guardado en este navegador)" : "Pega aquí tu token";
+  $("ghRes").className = "res"; $("ghRes").textContent = "";
+  if (!$("dlgGH").open) $("dlgGH").showModal();
+}
 async function ghProbar(salida) {
   salida.className = "res"; salida.textContent = "Probando…";
   try {
@@ -1066,13 +1269,101 @@ async function ghProbar(salida) {
     if (!ghToken()) throw new Error("pega primero tu token");
     const r = await gh(`/repos/${c.usuario}/${c.repo}`);
     await gh(`/repos/${c.usuario}/${c.repo}/branches/${ghRama(c)}`);
-    const push = r.permissions ? (r.permissions.push ? "sí" : "NO") : "no se pudo comprobar";
-    salida.className = "res " + (r.permissions && !r.permissions.push ? "mal" : "ok");
-    salida.textContent = `✔ Conectado a ${r.full_name} (rama ${c.rama}). Permiso para escribir: ${push}.` + (r.private ? "" : "\nEl repositorio es público: no guardes ahí datos privados.");
-  } catch (err) { salida.className = "res mal"; salida.textContent = "✖ " + err.message; }
+    const escribe = r.permissions ? !!r.permissions.push : null;
+    if (escribe === false) {
+      salida.className = "res mal";
+      salida.textContent = `⚠ Conectado a ${r.full_name}, pero el token NO tiene permiso de escritura. Crea otro con «Contents: Read and write».`;
+      return false;
+    }
+    salida.className = "res ok";
+    salida.textContent = `✔ Conectado a ${r.full_name} (rama ${c.rama}).` + (escribe === null ? " No pude comprobar el permiso de escritura; se verá al publicar." : " Permiso para escribir: sí.");
+    return true;
+  } catch (err) { salida.className = "res mal"; salida.textContent = "✖ " + err.message; return false; }
+}
+async function ghProbarGuardar() {
+  const g = datos.ajustes.github;
+  g.usuario = $("ghUsuario").value.trim(); g.repo = $("ghRepo").value.trim();
+  g.rama = $("ghRama").value.trim() || "main"; g.carpeta = $("ghCarpeta").value.trim();
+  ghGuardarCfg({ usuario: g.usuario, repo: g.repo, rama: g.rama, carpeta: g.carpeta });
+  const t = $("ghToken").value.trim(); if (t) { ghGuardarToken(t); $("ghToken").value = ""; }
+  const ok = await ghProbar($("ghRes"));
+  pintarGH(); renderAjustes();
+  if (ok) toast("GitHub conectado. Ya puedes usar 🚀 Publicar.", "ok");
+  return ok;
+}
+
+function preguntarConflicto(texto) {
+  return new Promise(res => {
+    const d = $("dlgConflicto"); $("cfTexto").textContent = texto;
+    let listo = false;
+    const fin = v => { if (listo) return; listo = true; if (d.open) d.close(); res(v); };
+    $("cfCancelar").onclick = () => fin("cancelar"); $("cfTraer").onclick = () => fin("traer"); $("cfReemplazar").onclick = () => fin("reemplazar");
+    d.oncancel = () => fin("cancelar");
+    d.showModal();
+  });
+}
+
+async function publicarGitHub() {
+  if (!ghListo()) { toast("Primero conecta GitHub (solo se hace una vez).", "", 5000); abrirGH(); return; }
+  if ($("formArt").open) { toast("Cierra el formulario del artículo antes de publicar.", "mal"); return; }
+  const c = ghConfig(), base = `/repos/${c.usuario}/${c.repo}`, pref = ghPrefijo(c), btn = $("publicar");
+  btn.disabled = true; btn.textContent = "⏳ Publicando…";
+  try {
+    toast("Publicando… (1/5) revisando GitHub", "", 0);
+    const ref = await gh(`${base}/git/ref/heads/${ghRama(c)}`);
+    const padre = ref.object.sha;
+    const commitPadre = await gh(`${base}/git/commits/${padre}`);
+    // ¿Qué hay publicado ahora? (para no pisar cambios hechos en otro lado)
+    let remotoDatos = null, remotoJSON = null;
+    try {
+      const f = await gh(`${base}/contents/${pref}articulos.js?ref=${ghRama(c)}`);
+      remotoDatos = datosDeTexto(decodificarB64(f.content)); remotoJSON = instantanea(remotoDatos);
+    } catch (er) { /* todavía no existe o no se pudo leer */ }
+    const mio = instantanea();
+    if (remotoJSON && remotoJSON !== snapshot && remotoJSON !== mio) {
+      toast("Hay una versión distinta en GitHub…", "", 0);
+      const r = await preguntarConflicto("En GitHub hay una versión del catálogo distinta a la que tienes abierta aquí (por ejemplo, porque publicaste o cambiaste algo desde otro lado). Si publicas lo tuyo, se reemplaza lo que hay allá.");
+      if (r === "cancelar") { toast("Publicación cancelada.", ""); return; }
+      if (r === "traer") {
+        const cfg = datos.ajustes.github;
+        datos = remotoDatos; if (!datos.ajustes.github.usuario) datos.ajustes.github = cfg;
+        fotosPendientes.clear(); snapshot = instantanea(); sucio = false; renderTodo(); pintarEstado(); pintarGH();
+        toast("Listo: ahora ves lo que está publicado. Haz de nuevo tus cambios y publica.", "ok");
+        return;
+      }
+    }
+    if (remotoJSON === mio && !fotosPendientes.size) {
+      snapshot = mio; sucio = false; pintarEstado();
+      toast("Ya está todo publicado: no hay cambios nuevos.", "ok"); return;
+    }
+    const archivos = [];
+    if (remotoJSON !== mio) archivos.push({ ruta: pref + "articulos.js", base64: b64Texto(generar()) });
+    for (const [ruta, f] of fotosPendientes) archivos.push({ ruta: pref + ruta, base64: await b64Archivo(f) });
+    toast(`Publicando… (2/5) subiendo ${archivos.length} archivo(s)`, "", 0);
+    const entradas = [];
+    for (const a of archivos) {
+      const blob = await gh(`${base}/git/blobs`, { method: "POST", body: JSON.stringify({ content: a.base64, encoding: "base64" }) });
+      entradas.push({ path: a.ruta, mode: "100644", type: "blob", sha: blob.sha });
+    }
+    toast("Publicando… (3/5) armando el cambio", "", 0);
+    const arbol = await gh(`${base}/git/trees`, { method: "POST", body: JSON.stringify({ base_tree: commitPadre.tree.sha, tree: entradas }) });
+    const nuevo = await gh(`${base}/git/commits`, { method: "POST", body: JSON.stringify({ message: "Actualización desde el editor · " + new Date().toLocaleString(), tree: arbol.sha, parents: [padre] }) });
+    toast("Publicando… (4/5) enviando", "", 0);
+    await gh(`${base}/git/refs/heads/${ghRama(c)}`, { method: "PATCH", body: JSON.stringify({ sha: nuevo.sha }) });
+    const nFotos = archivos.filter(a => !a.ruta.endsWith("articulos.js")).length;
+    fotosPendientes.clear(); snapshot = mio; sucio = false; pintarEstado();
+    toast(`✔ Publicado${nFotos ? " (con " + nFotos + " foto" + (nFotos > 1 ? "s" : "") + ")" : ""}. En 1 o 2 minutos se ve en <a href="${escH(urlSitio(c))}" target="_blank" rel="noopener">tu sitio</a> (recarga con Ctrl+F5).`, "ok", 15000, true);
+  } catch (er) { toast("No se pudo publicar: " + er.message, "mal", 14000); }
+  finally { btn.disabled = false; btn.textContent = "🚀 Publicar"; }
 }
 $("publicar").addEventListener("click", publicarGitHub);
-$("traer").addEventListener("click", traerPublicado);
+$("ghEstado").addEventListener("click", abrirGH);
+$("ghCerrar").addEventListener("click", () => $("dlgGH").close());
+$("ghOlvidar").addEventListener("click", () => {
+  ghGuardarToken(""); pintarGH(); $("ghToken").placeholder = "Pega aquí tu token";
+  $("ghRes").className = "res"; $("ghRes").textContent = "Token borrado de este navegador.";
+});
+$("ghProbarGuardar").addEventListener("click", ghProbarGuardar);
 
 /* ---------- Pestañas y arranque ---------- */
 document.querySelectorAll("#tabs button").forEach(b => b.addEventListener("click", () => {
@@ -1080,7 +1371,8 @@ document.querySelectorAll("#tabs button").forEach(b => b.addEventListener("click
   document.querySelectorAll("section").forEach(s => { s.hidden = s.id !== "t-" + b.dataset.t; });
 }));
 function renderTodo() { renderArticulos(); renderCategorias(); renderAjustes(); renderColores(); }
-renderTodo(); pintarEstado();
+snapshot = instantanea();
+renderTodo(); pintarEstado(); pintarGH();
 
 (async () => {
   if (!soporta) return;
