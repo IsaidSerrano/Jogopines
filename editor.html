@@ -515,22 +515,82 @@ async function reducir(file, max = 900) {
   return { blob, ext: png ? ".png" : ".jpg" };
 }
 const fotosPendientes = new Map();   // ruta -> archivo (se suben a GitHub al presionar Publicar)
-async function elegirFoto(file, alRuta) {
-  if (!file) return;
-  const ruta = "Fotos/" + file.name;
-  fotosPendientes.set(ruta, file);
-  alRuta(ruta);
-  let aviso = "Foto vinculada: " + ruta;
-  if (conectado) {
-    try {
-      const dir = await carpeta.getDirectoryHandle("Fotos", { create: true });
-      const w = await (await dir.getFileHandle(file.name, { create: true })).createWritable();
-      await w.write(file); await w.close();
-      aviso += " (copiada a tu carpeta Fotos)";
-    } catch (e) { /* si no se puede copiar, queda solo vinculada */ }
+// Images stay in the folder selected by the owner; never flatten subfolders.
+function rutaFotoValida(ruta) {
+  const r=String(ruta||'').trim().replace(/\\/g,'/');
+  const p=r.split('/');
+  if(p.length<2 || p[0].toLowerCase()!=='fotos' || p.some(x=>!x || x==='.' || x==='..' || /[?#:]/.test(x))) throw new Error('Usa una ruta relativa como Fotos/Pedido-02/pin.avif.');
+  return r;
+}
+async function archivoEnRuta(ruta) {
+  const partes=rutaFotoValida(ruta).split('/'); let dir=carpeta;
+  for(const parte of partes.slice(0,-1))dir=await dir.getDirectoryHandle(parte);
+  return (await dir.getFileHandle(partes.at(-1))).getFile();
+}
+async function buscarFotos(dir,nombre,prefijo='') {
+  const halladas=[];
+  for await (const [n,h] of dir.entries()) {
+    const ruta=prefijo+n;
+    if(h.kind==='directory')halladas.push(...await buscarFotos(h,nombre,ruta+'/'));
+    else if(n===nombre)halladas.push({ruta,archivo:await h.getFile()});
   }
-  if (ghListo()) aviso += " · se subirá al presionar Publicar";
-  mensaje(aviso);
+  return halladas;
+}
+async function igualesFotos(a,b) {
+  if(a.size!==b.size)return false;
+  const [x,y]=await Promise.all([a.arrayBuffer(),b.arrayBuffer()]);
+  const u=new Uint8Array(x),v=new Uint8Array(y);
+  return u.every((n,i)=>n===v[i]);
+}
+async function elegirFoto(file,alRuta) {
+  if(!file)return false;
+  try {
+    let ruta='';
+    if(conectado) {
+      const candidatas=[];
+      for await(const [n,h] of carpeta.entries())if(h.kind==='directory' && n.toLowerCase()==='fotos')candidatas.push(...await buscarFotos(h,file.name,n+'/'));
+      const iguales=[];
+      for(const c of candidatas)if(await igualesFotos(c.archivo,file))iguales.push(c.ruta);
+      if(iguales.length===1)ruta=iguales[0];
+      else if(iguales.length>1) {
+        ruta=prompt('Esta imagen aparece en varias carpetas. Copia la ruta que quieres usar:\n'+iguales.join('\n'),iguales[0]);
+        if(ruta===null)return false;
+        if(!iguales.includes(ruta.trim()))throw new Error('Selecciona una de las rutas encontradas.');
+      } else throw new Error('Primero coloca esta foto dentro de Fotos o de una de sus subcarpetas en el repositorio conectado. Luego selecciónala otra vez.');
+    } else {
+      ruta=prompt('Conecta la carpeta del repositorio para reconocer la ubicación automáticamente. O escribe la ruta completa de la foto dentro del sitio:', 'Fotos/Pedido-02/'+file.name);
+      if(ruta===null)return false;
+    }
+    ruta=rutaFotoValida(ruta);
+    fotosPendientes.set(ruta,file); alRuta(ruta);
+    mensaje('Foto vinculada: '+ruta+(ghListo()?' · se subirá al presionar Publicar':''));
+    return true;
+  } catch(error) { mensaje('No se vinculó la foto: '+error.message); return false; }
+}
+// Rebuild pending uploads from current references, including after reopening.
+async function prepararFotosPublicacion(base,sha,pref) {
+  const arbol=await gh(`${base}/git/trees/${sha}?recursive=1`);
+  if(arbol.truncated)throw new Error('No se pudo comprobar el árbol completo del repositorio. Publica con GitHub Desktop.');
+  const remoto=new Map(arbol.tree.filter(x=>x.type==='blob').map(x=>[x.path,x.sha]));
+  const rutas=new Set([datos.ajustes.logo,datos.ajustes.yappy?.qr,...datos.articulos.flatMap(a=>[a.imagen,...(a.piezas||[]).map(p=>p.imagen)])].filter(r=>r && /^fotos[\/]/i.test(r)));
+  for(const rutaOriginal of rutas) {
+    const ruta=rutaFotoValida(rutaOriginal);
+    let archivo=fotosPendientes.get(ruta);
+    if(conectado) {
+      try { archivo=await archivoEnRuta(ruta); }
+      catch(error) { if(!archivo && !remoto.has(pref+ruta))throw new Error('Falta la foto '+ruta+'. Revisa su ruta antes de publicar.'); }
+    }
+    if(!archivo) {
+      if(!remoto.has(pref+ruta))throw new Error('Conecta la carpeta o vuelve a seleccionar '+ruta+' para poder subirla.');
+      continue;
+    }
+    const bytes=new Uint8Array(await archivo.arrayBuffer());
+    const cabecera=new TextEncoder().encode('blob '+bytes.length+'\0');
+    const blob=new Uint8Array(cabecera.length+bytes.length);blob.set(cabecera);blob.set(bytes,cabecera.length);
+    const shaLocal=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-1',blob)),b=>b.toString(16).padStart(2,'0')).join('');
+    if(remoto.get(pref+ruta)!==shaLocal)fotosPendientes.set(ruta,archivo);
+    else fotosPendientes.delete(ruta);
+  }
 }
 
 /* ---------- Piezas de interfaz ---------- */
@@ -588,7 +648,7 @@ function abrirLightbox(src, titulo) { $("lbImg").src = src; $("lbTit").textConte
 $("lightbox").addEventListener("click", () => $("lightbox").close());
 function campoFoto(obj, clave, local) {
   const txt = campo(obj, clave, { local, alCambiar: v => mini.poner(v.trim()) });
-  txt.placeholder = "Fotos/nombre.jpg";
+  txt.placeholder = "Fotos/Pedido-02/nombre.avif";
   const mini = miniatura(obj[clave], () => obj.nombre || obj.titulo || "");
   const lbl = document.createElement("label"); lbl.textContent = "📁"; lbl.title = "Elegir foto de tu computadora";
   const arch = document.createElement("input"); arch.type = "file"; arch.accept = "image/*"; arch.hidden = true;
@@ -930,7 +990,7 @@ async function guardarFormulario(otro) {
     a.piezas = pz;
     a.precioPack = pz.length && Number($("fPrecioPack").value) > 0 ? Number($("fPrecioPack").value) : "";
     if (pz.length) a.cantidad = pz.reduce((s, p) => s + p.cantidad, 0);
-    if (fArchivo) await elegirFoto(fArchivo, ruta => { a.imagen = ruta; });
+    if (fArchivo && !await elegirFoto(fArchivo, ruta => { a.imagen = ruta; })) { $("fError").textContent="No se guardó: revisa la ubicación de la foto."; return; }
     if (!editando) datos.articulos.unshift(a);
     ultimaCat = a.categoria;
     $("buscar").value = ""; catFiltro = ""; cerrados.delete(a.categoria);
@@ -1332,6 +1392,7 @@ async function publicarGitHub() {
         return;
       }
     }
+    await prepararFotosPublicacion(base, commitPadre.tree.sha, pref);
     if (remotoJSON === mio && !fotosPendientes.size) {
       snapshot = mio; sucio = false; pintarEstado();
       toast("Ya está todo publicado: no hay cambios nuevos.", "ok"); return;
