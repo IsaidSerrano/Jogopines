@@ -655,7 +655,7 @@ function pintarCuadricula() {
     boton.innerHTML = `${decorarTarjeta(a)}${fotoHTML(a)}
       <div class="nombre">${esc(a.nombre)}</div>
       ${esPack(a) ? '<div class="sub">📦 Pack · elige tus pines</div>' : ""}
-      <div class="fila"><span class="precio">${precio(a.precio)}${esPack(a) ? " c/u" : ""}</span><span class="estados-art"><span class="estado ${e.cls}">${e.txt}</span>${a.enCamino && stockDe(a) > 0 ? '<span class="estado camino">Más en camino</span>' : ""}</span></div>`;
+      <div class="fila"><span class="precio">${precio(a.precio)}${esPack(a) ? " c/u" : ""}</span><span class="estados-art"><span class="estado ${e.cls}">${e.txt}</span>${a.enCamino && stockDe(a) > 0 ? '<span class="estado camino">En camino</span>' : ""}</span></div>`;
     boton.addEventListener("click", () => abrir(a));
     cuadricula.appendChild(boton);
   });
@@ -1198,7 +1198,7 @@ function abrir(a) {
     <label class="todos"><input type="checkbox" id="chkTodos"> Seleccionar todos los disponibles</label>`;
 
   detalle.innerHTML = `${fotoHTML(a)}
-    <div class="meta"><span class="cat">${esc((cat.emoji ? cat.emoji + " " : "") + (a.categoria || ""))}</span><span class="estado ${e.cls}">${e.txt}</span>${a.enCamino && stock > 0 ? '<span class="estado camino">Más en camino</span>' : ""}</div>
+    <div class="meta"><span class="cat">${esc((cat.emoji ? cat.emoji + " " : "") + (a.categoria || ""))}</span><span class="estado ${e.cls}">${e.txt}</span>${a.enCamino && stock > 0 ? '<span class="estado camino">En camino</span>' : ""}</div>
     <h2>${esc(a.nombre)}</h2>
     <div class="precio">${precio(a.precio)}${esP ? " c/u" : ""}</div>
     <p>${esc(a.descripcion)}</p>

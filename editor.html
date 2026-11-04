@@ -252,7 +252,7 @@ tr.grupo-fila td { padding: 0; background: #F5EBDD; border-top: 3px solid var(--
       <h3>Inventario en tu hoja de cálculo</h3>
       <p>Lleva tu inventario en una hoja de Google Sheets (puedes usar la plantilla <code>inventario-jogopines.xlsx</code>). Publica la hoja <b>Catalogo</b> como CSV, pega el enlace en <b>Negocio y contacto → Inventario en hoja de cálculo</b> y presiona <b>🔎 Probar enlace</b>. Desde ahí, la cantidad y el precio del catálogo salen de la hoja y se actualizan en unos minutos, sin volver a subir la carpeta. El <b>nombre</b> del pin debe ser igual en la hoja y en el editor. Con la plantilla nueva también se controlan las <b>piezas de los packs</b> (filas «Pack | Pieza»): cuando vendes una pieza por fuera y la anotas en la hoja Ventas, deja de salir disponible en el catálogo.</p>
       <h3>Packs: elegir pin por pin</h3>
-      <p>En el formulario de un artículo (✏️) abre <b>📦 Piezas del pack</b> y escribe cuántos pines trae y presiona <b>Crear</b>: se hacen «Pin 1», «Pin 2»... que luego puedes renombrar y completar con sus medidas. El cliente marca los que quiere (o «Seleccionar todos») y el precio cambia. Cada pieza cuesta el precio del artículo, que es <b>por pin</b>, salvo que le pongas otro precio. Si quieres un precio especial por llevar todo, ponlo en «Precio si se llevan todas». Para marcar un pin como vendido, pon su cantidad en 0. En <b>Negocio y contacto</b> eliges el efecto visual de la selección.</p>
+      <p>En el formulario de un artículo (✏️) abre <b>📦 Piezas del pack</b> y escribe cuántos pines trae y presiona <b>Crear</b>: se crean campos vacíos con las guías «Pin 1», «Pin 2»... Escribe directamente el nombre y las medidas. El cliente marca los que quiere (o «Seleccionar todos») y el precio cambia. Cada pieza cuesta el precio del artículo, que es <b>por pin</b>, salvo que le pongas otro precio. Si quieres un precio especial por llevar todo, ponlo en «Precio si se llevan todas». Para marcar un pin como vendido, pon su cantidad en 0. En <b>Negocio y contacto</b> eliges el efecto visual de la selección.</p>
       <h3>Carrito de compras</h3>
       <p>El cliente agrega pines al carrito y lo ve a un costado, con el desglose de cada artículo y el total. Desde ahí pide todo por WhatsApp o paga con Yappy. Se puede ocultar en <b>Negocio y contacto → Carrito de compras</b>.</p>
       <h3>Pago con Yappy</h3>
@@ -301,7 +301,7 @@ tr.grupo-fila td { padding: 0; background: #F5EBDD; border-top: 3px solid var(--
     </div>
     <details class="pz-box" id="fPiezasBox">
       <summary>📦 Piezas del pack (opcional)</summary>
-      <p class="pz-nota">Si este artículo es un pack, escribe cuántos pines trae y presiona <b>Crear</b>: se hacen «Pin 1», «Pin 2», «Pin 3»... Después puedes cambiarles el nombre y ponerles sus medidas. El cliente podrá elegir cuáles llevar y el precio cambia según su elección. Cada pieza cuesta el <b>Precio</b> de arriba (por pin), salvo que le pongas otro. La <b>cantidad</b> del artículo se calcula sola sumando las piezas disponibles.</p>
+      <p class="pz-nota">Si este artículo es un pack, escribe cuántos pines trae y presiona <b>Crear</b>: se crean campos vacíos con las guías tenues «Pin 1», «Pin 2», «Pin 3»... Escribe o pega directamente el nombre y completa las medidas. El cliente podrá elegir cuáles llevar y el precio cambia según su elección. Cada pieza cuesta el <b>Precio</b> de arriba (por pin), salvo que le pongas otro. La <b>cantidad</b> del artículo se calcula sola sumando las piezas disponibles.</p>
       <div class="pz-tabla" id="fPiezas"></div>
       <div class="pz-barra">
         <span class="pz-rapido">Crear <input type="number" id="fNPiezas" min="1" max="60" value="3"> pines de una vez <button type="button" id="fCrearN">Crear</button></span>
@@ -934,20 +934,15 @@ function renderPiezasForm() {
   });
   sincCantidadForm();
 }
-function nombreLibre() {            // «Pin 1», «Pin 2»... sin repetir ninguno que ya exista
-  const usados = new Set(fPz.map(p => normTxt(p.nombre || "")));
-  let n = 1; while (usados.has(normTxt("Pin " + n))) n++;
-  return "Pin " + n;
-}
 $("fAddPieza").addEventListener("click", () => {
-  fPz.push({ nombre: nombreLibre(), medidas: "", imagen: "", precio: "", cantidad: 1 });
+  fPz.push({ nombre: "", medidas: "", imagen: "", precio: "", cantidad: 1 });
   $("fPiezasBox").open = true; renderPiezasForm();
   const filas = $("fPiezas").querySelectorAll(".pz-fila:not(.pz-cab)");
   const campo1 = filas[filas.length - 1].querySelector("input"); campo1.focus(); campo1.select();
 });
 $("fCrearN").addEventListener("click", () => {
   const n = Math.min(60, Math.max(1, Math.floor(Number($("fNPiezas").value) || 0)));
-  for (let k = 0; k < n; k++) fPz.push({ nombre: nombreLibre(), medidas: "", imagen: "", precio: "", cantidad: 1 });
+  for (let k = 0; k < n; k++) fPz.push({ nombre: "", medidas: "", imagen: "", precio: "", cantidad: 1 });
   $("fPiezasBox").open = true; renderPiezasForm();
 });
 $("fCrearPiezas").addEventListener("click", () => {
