@@ -16,7 +16,7 @@ button.principal { background: var(--acento); border-color: var(--acento); color
 input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--acento); }
 input[type=color] { width: 56px; height: 36px; padding: 2px; }
 
-.top { position: sticky; top: 0; z-index: 5; background: var(--fondo); padding: 12px 16px 0; border-bottom: 1px solid var(--borde); }
+.top { position: sticky; top: 0; z-index: 20; background: var(--fondo); padding: 12px 16px 0; border-bottom: 1px solid var(--borde); }
 .top h1 { font-size: 1.25rem; }
 .barra { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 8px 0; }
 #estado { font-size: .9rem; color: var(--suave); }
@@ -35,8 +35,20 @@ input[type=color] { width: 56px; height: 36px; padding: 2px; }
 .herr { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
 .herr input[type=search], .herr select { max-width: 220px; }
 #conteo { color: var(--suave); font-size: .9rem; }
+.sticky-tools { position: sticky; top: var(--top-sticky-height, 0px); z-index: 10; background: var(--fondo); padding: 8px 0 10px; border-bottom: 1px solid var(--borde); box-shadow: 0 8px 14px rgba(58, 51, 80, .07); }
 .tabla { overflow-x: auto; }
-table { width: 100%; min-width: 1430px; border-collapse: collapse; background: var(--tarjeta); border: 1px solid var(--borde); }
+table { width: 100%; min-width: 1600px; table-layout: fixed; border-collapse: collapse; background: var(--tarjeta); border: 1px solid var(--borde); }
+th:nth-child(1), td:nth-child(1) { width: 2.5%; }
+th:nth-child(2), td:nth-child(2) { width: 14%; }
+th:nth-child(3), td:nth-child(3) { width: 120px; }
+th:nth-child(4), td:nth-child(4) { width: 92px; }
+th:nth-child(5), td:nth-child(5) { width: 92px; }
+th:nth-child(6), td:nth-child(6) { width: 64px; text-align: center; }
+th:nth-child(7), td:nth-child(7) { width: 64px; text-align: center; }
+th:nth-child(8), td:nth-child(8) { width: 240px; }
+th:nth-child(9), td:nth-child(9) { width: 19%; }
+th:nth-child(10), td:nth-child(10) { width: auto; }
+th:nth-child(11), td:nth-child(11) { width: 120px; }
 th { text-align: left; font-size: .8rem; color: var(--suave); padding: 8px; background: #F5EBDD; }
 th:first-child, td:first-child { text-align: center; width: 38px; }
 .bulk-bar { display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:10px 12px; margin:0 0 10px; border:1px solid var(--borde); border-radius:10px; background:#fff; }
@@ -55,6 +67,10 @@ tr.agotado td { background: var(--agotado); }
 .mini:hover { transform: scale(1.05); }
 .mini.rota { outline: 2px solid var(--mal); }
 .x { padding: 6px 10px; color: var(--acento); }
+.acciones-fila { display: flex; align-items: center; justify-content: center; gap: 5px; white-space: nowrap; }
+.acciones-fila button { flex: none; }
+.acciones-fila .editar-fila { width: 68px; min-width: 68px; padding: 6px 4px; font-size: .82rem; }
+.acciones-fila .quitar-fila { width: 36px; min-width: 36px; padding: 6px 3px; }
 
 .campo { display: grid; grid-template-columns: 210px 1fr; gap: 6px 16px; align-items: start; max-width: 800px; margin-bottom: 14px; }
 .campo > label { padding-top: 7px; font-weight: 600; }
@@ -107,11 +123,15 @@ dialog { max-height: 92vh; overflow-y: auto; }
 #tablaArt[data-fotos="s"] { --mini: 44px; } #tablaArt[data-fotos="m"] { --mini: 72px; }
 #tablaArt[data-fotos="l"] { --mini: 96px; } #tablaArt[data-fotos="xl"] { --mini: 140px; }
 .chk-celda { display: flex; justify-content: center; align-items: center; min-height: 36px; }
-.chk-celda input, .foto input[type=checkbox] { margin: 0; flex: none; }
+.chk-celda input, .foto input[type=checkbox] { margin: 0; flex: none; display: block; }
+.medidas-control { display: flex; align-items: center; gap: 0; min-height: 36px; }
+.medidas-control .chk-celda { width: 56px; flex: none; }
+.medidas-control > input { min-width: 0; flex: 1; }
 td { height: 1px; }
 .foto-celda { display: flex; gap: 8px; align-items: center; }
-.foto-celda .foto-campo { display: grid; gap: 6px; min-width: 150px; }
+.foto-celda .foto-campo { display: grid; gap: 6px; min-width: 0; flex: 1; }
 .foto-celda .foto-campo > div { display: flex; gap: 6px; align-items: center; }
+.foto-celda input { min-width: 0; }
 .foto-campo label { display: flex; align-items: center; justify-content: center; height: 36px; min-width: 36px; padding: 0 8px; }
 .tam-fotos { display: flex; gap: 6px; align-items: center; font-weight: 600; font-size: .9rem; }
 .tam-fotos select { width: auto; }
@@ -140,7 +160,8 @@ tr.grupo-fila td { padding: 0; background: #F5EBDD; border-top: 3px solid var(--
 #lightbox p { margin-top: 8px; font-weight: 700; }
 /* --- pantallas pequeñas --- */
 @media (max-width: 760px) {
-  .top { padding: 10px 10px 0; position: static; }   /* en el teléfono la cabecera no se queda fija: ocuparía media pantalla */
+  .top { padding: 10px 10px 0; }
+  .sticky-tools { padding-top: 6px; }
   .barra { gap: 8px; }
   .barra > button { flex: 1 1 150px; }
   #estado { flex: 1 1 100%; order: 9; font-size: .82rem; }
@@ -179,6 +200,7 @@ tr.grupo-fila td { padding: 0; background: #F5EBDD; border-top: 3px solid var(--
 <div class="layout" id="layout">
   <div>
     <section id="t-articulos">
+      <div class="sticky-tools">
       <div class="aviso-hoja" id="avisoHoja" hidden>📊 Inventario enlazado a tu hoja de cálculo: en el catálogo, la <b>cantidad</b> y el <b>precio</b> de cada artículo salen de la hoja (si el nombre coincide). Los de aquí se usan solo si la hoja no está disponible.</div>
       <div class="chips" id="chips"></div>
       <div class="herr">
@@ -194,6 +216,7 @@ tr.grupo-fila td { padding: 0; background: #F5EBDD; border-top: 3px solid var(--
         <button type="button" id="marcarCamino" disabled>📦 Marcar como «Viene en camino»</button>
         <button type="button" id="quitarCamino" disabled>✓ Quitar marca de seleccionados</button>
         <button type="button" id="limpiarSeleccion" disabled>Limpiar selección</button>
+      </div>
       </div>
       <div class="tabla"><table id="tablaArt" data-fotos="l">
         <thead><tr><th><input type="checkbox" id="selTodosArt" class="chk-seleccion" title="Seleccionar todos los artículos visibles"></th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Cantidad</th><th>Viene en camino</th><th>Broche</th><th class="medidas">Medidas</th><th>Foto</th><th>Descripción</th><th></th></tr></thead>
@@ -365,6 +388,15 @@ tr.grupo-fila td { padding: 0; background: #F5EBDD; border-top: 3px solid var(--
 
 <script src="articulos.js"></script>
 <script>
+// Mantiene la cinta de herramientas justo debajo de la cabecera fija.
+const topEditor = document.querySelector(".top");
+const actualizarAlturaCinta = () => document.documentElement.style.setProperty(
+  "--top-sticky-height", Math.ceil(topEditor.getBoundingClientRect().height) + "px"
+);
+actualizarAlturaCinta();
+if ("ResizeObserver" in window) new ResizeObserver(actualizarAlturaCinta).observe(topEditor);
+else window.addEventListener("resize", actualizarAlturaCinta, { passive: true });
+
 const $ = id => document.getElementById(id);
 const COLORES_BASE = { fondo: "#FBF6EE", cabecera: "#FBE9D0", acento: "#8A3B4E", p1: "#FFD9E2", p2: "#D5F0E3", p3: "#FFE9C7", p4: "#D4E6FA", p5: "#E6DCF7" };
 const COLORES_DEF = [["fondo", "Fondo de la página"], ["cabecera", "Franja de arriba"], ["acento", "Botones y precios"],
@@ -632,7 +664,8 @@ function tdMedidas(a) {
   const i = campo(a, "medidas"); i.placeholder = "ej. 3 × 2.5 cm";
   const v = document.createElement("input"); v.type = "checkbox"; v.checked = a.verMedidas !== false; v.title = "Mostrar las medidas de este pin";
   v.addEventListener("change", () => { a.verMedidas = v.checked; cambio(); });
-  const cont = document.createElement("div"); cont.className = "foto"; cont.append(v, i);
+  const check = document.createElement("div"); check.className = "chk-celda"; check.append(v);
+  const cont = document.createElement("div"); cont.className = "medidas-control"; cont.append(check, i);
   const td = celda(cont); td.className = "medidas"; return td;
 }
 function celda(...hijos) { const td = document.createElement("td"); td.append(...hijos); return td; }
@@ -798,7 +831,7 @@ function crearFila(a) {
   chk.addEventListener("change", () => { a.broche = chk.checked; cambio(); });
   const cc = document.createElement("div"); cc.className = "chk-celda"; cc.appendChild(chk);
 
-  const x = document.createElement("button"); x.className = "x"; x.textContent = "✕"; x.title = "Quitar artículo";
+  const x = document.createElement("button"); x.className = "x quitar-fila"; x.textContent = "✕"; x.title = "Quitar artículo";
   x.addEventListener("click", () => {
     if (confirm(`¿Quitar "${a.nombre || "artículo sin nombre"}"?`)) {
       datos.articulos = datos.articulos.filter(o => o !== a);
@@ -807,14 +840,19 @@ function crearFila(a) {
     }
   });
 
-  const ed = document.createElement("button"); ed.className = "x"; ed.textContent = (Array.isArray(a.piezas) && a.piezas.length) ? "✏️ 📦" + a.piezas.length : "✏️"; ed.title = "Editar con el formulario completo";
+  const esPack = Array.isArray(a.piezas) && a.piezas.length;
+  const ed = document.createElement("button"); ed.className = "x editar-fila"; ed.textContent = esPack ? "✏️ 📦" + a.piezas.length : "✏️";
+  ed.title = esPack ? `Editar pack (${a.piezas.length} piezas)` : "Editar con el formulario completo";
   ed.addEventListener("click", () => abrirFormulario(a));
+  const acciones = document.createElement("div"); acciones.className = "acciones-fila"; acciones.append(ed, x);
+
+  const caminoCont = document.createElement("div"); caminoCont.className = "chk-celda"; caminoCont.append(camino);
 
   tr.append(
     celda(chkSel), celda(campo(a, "nombre")), celda(sel),
     celda(campo(a, "precio", { tipo: "number", paso: "0.01", clase: "num" })),
-    celda(cantidadCampo(a, marcar)), celda(camino),
-    celda(cc), tdMedidas(a), celda(campoFoto(a, "imagen")), celda(campo(a, "descripcion")), celda(ed, x)
+    celda(cantidadCampo(a, marcar)), celda(caminoCont),
+    celda(cc), tdMedidas(a), celda(campoFoto(a, "imagen")), celda(campo(a, "descripcion")), celda(acciones)
   );
   marcar();
   return tr;
